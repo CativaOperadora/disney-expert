@@ -1,0 +1,406 @@
+/* =====================================================================
+   DISNEY EXPERT · Estilos
+   Azul do céu de Orlando ao anoitecer, com dourado de luz de fim de tarde.
+   Uma coluna, alvos de toque grandes, sem nada que atrapalhe no celular.
+   ===================================================================== */
+
+:root {
+  --noite: #1b2a4a;
+  --noite-media: #3d4d6e;
+  --noite-clara: #6b7793;
+  --dourado: #e4a11b;
+  --dourado-fundo: #fdf4e2;
+  --papel: #fbfaf7;
+  --branco: #ffffff;
+  --linha: #e2e0d9;
+  --linha-forte: #c9c6bc;
+  --erro: #a8332b;
+  --erro-fundo: #fdf1f0;
+
+  --raio: 12px;
+  --coluna: 560px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--papel);
+  color: var(--noite);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.display {
+  font-family: var(--fonte-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* --- estrutura ------------------------------------------------------ */
+
+.pagina {
+  max-width: var(--coluna);
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* --- convite do agente ---------------------------------------------- */
+
+.convite {
+  background: var(--dourado-fundo);
+  border: 1px solid #f0dfb8;
+  border-radius: var(--raio);
+  padding: 16px 18px;
+  margin-bottom: 28px;
+}
+
+.convite-rotulo {
+  font-size: 13px;
+  color: #8a6410;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.convite-nome {
+  font-size: 17px;
+  color: #5c430b;
+  font-weight: 500;
+}
+
+/* --- roteiro de cinco paradas --------------------------------------- */
+
+.roteiro {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 36px;
+}
+
+.parada {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.parada::before,
+.parada::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  height: 2px;
+  background: var(--linha);
+  width: 50%;
+}
+
+.parada::before { left: 0; }
+.parada::after { right: 0; }
+.parada:first-child::before,
+.parada:last-child::after { display: none; }
+
+.parada.feita::before,
+.parada.feita::after,
+.parada.atual::before {
+  background: var(--dourado);
+}
+
+.ponto {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--branco);
+  border: 2px solid var(--linha-forte);
+  position: relative;
+  z-index: 1;
+}
+
+.parada.feita .ponto {
+  background: var(--dourado);
+  border-color: var(--dourado);
+}
+
+.parada.atual .ponto {
+  background: var(--branco);
+  border-color: var(--dourado);
+  box-shadow: 0 0 0 4px var(--dourado-fundo);
+}
+
+.parada-nome {
+  font-size: 12px;
+  color: var(--noite-clara);
+  margin-top: 10px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.parada.atual .parada-nome {
+  color: var(--noite);
+  font-weight: 500;
+}
+
+/* --- cabeçalho do passo --------------------------------------------- */
+
+.passo-titulo {
+  font-size: 27px;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.passo-descricao {
+  color: var(--noite-clara);
+  margin-bottom: 32px;
+}
+
+/* --- campos --------------------------------------------------------- */
+
+.campo { margin-bottom: 30px; }
+
+.rotulo {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.ajuda {
+  display: block;
+  font-size: 14px;
+  color: var(--noite-clara);
+  margin-bottom: 12px;
+}
+
+.rotulo + .entrada,
+.rotulo + .opcoes { margin-top: 10px; }
+
+.entrada {
+  width: 100%;
+  padding: 13px 14px;
+  font-size: 17px;
+  font-family: inherit;
+  color: var(--noite);
+  background: var(--branco);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--raio);
+  transition: border-color 0.15s;
+}
+
+.entrada:focus {
+  outline: none;
+  border-color: var(--noite-media);
+  box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.09);
+}
+
+.entrada.invalida { border-color: var(--erro); }
+
+.par { display: flex; gap: 10px; }
+.par > * { flex: 1; }
+
+/* --- opções como cartões, não como bolinhas ------------------------- */
+
+.opcoes { display: flex; flex-direction: column; gap: 8px; }
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--branco);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--raio);
+  cursor: pointer;
+  text-align: left;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--noite);
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.opcao:hover { border-color: var(--noite-clara); }
+
+.opcao.marcada {
+  border-color: var(--dourado);
+  background: var(--dourado-fundo);
+}
+
+.marca {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid var(--linha-forte);
+  background: var(--branco);
+}
+
+.marca.redonda { border-radius: 50%; }
+.marca.quadrada { border-radius: 5px; }
+
+.opcao.marcada .marca {
+  border-color: var(--dourado);
+  background: var(--dourado);
+  position: relative;
+}
+
+.opcao.marcada .marca::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--branco);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- aceite --------------------------------------------------------- */
+
+.aceite {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: var(--branco);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+  font-family: inherit;
+  color: var(--noite);
+  width: 100%;
+}
+
+.aceite .marca { margin-top: 1px; }
+.aceite.marcada { border-color: var(--dourado); }
+
+/* --- mensagens de erro ---------------------------------------------- */
+
+.erro {
+  display: block;
+  font-size: 14px;
+  color: var(--erro);
+  margin-top: 8px;
+}
+
+.erro-caixa {
+  background: var(--erro-fundo);
+  border: 1px solid #eccbc8;
+  border-radius: var(--raio);
+  padding: 14px 16px;
+  font-size: 15px;
+  color: var(--erro);
+  margin-bottom: 20px;
+}
+
+/* --- navegação ------------------------------------------------------ */
+
+.navegacao {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.botao {
+  padding: 15px 26px;
+  font-size: 17px;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: var(--raio);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.botao:disabled { opacity: 0.55; cursor: default; }
+
+.botao-principal {
+  flex: 1;
+  background: var(--noite);
+  color: var(--branco);
+}
+
+.botao-principal:hover:not(:disabled) { background: var(--noite-media); }
+
+.botao-voltar {
+  background: transparent;
+  color: var(--noite-clara);
+  border-color: var(--linha-forte);
+}
+
+/* --- conclusão ------------------------------------------------------ */
+
+.fim { text-align: center; padding: 40px 0; }
+
+.fim-selo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--dourado-fundo);
+  border: 2px solid var(--dourado);
+  margin: 0 auto 26px;
+  position: relative;
+}
+
+.fim-selo::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 13px;
+  width: 12px;
+  height: 22px;
+  border: solid var(--dourado);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.fim-titulo { font-size: 29px; margin-bottom: 14px; }
+.fim-texto { color: var(--noite-media); margin-bottom: 30px; }
+
+.protocolo {
+  display: inline-block;
+  padding: 10px 18px;
+  background: var(--branco);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--raio);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+}
+
+/* --- página de link inválido ---------------------------------------- */
+
+.aviso { text-align: center; padding: 60px 0; }
+.aviso-titulo { font-size: 25px; margin-bottom: 14px; }
+.aviso-texto { color: var(--noite-media); }
+
+/* --- rodapé --------------------------------------------------------- */
+
+.rodape {
+  margin-top: 48px;
+  padding-top: 22px;
+  border-top: 1px solid var(--linha);
+  font-size: 13px;
+  color: var(--noite-clara);
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .pagina { padding: 24px 16px 60px; }
+  .passo-titulo { font-size: 24px; }
+  .parada-nome { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
