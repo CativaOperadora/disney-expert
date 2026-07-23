@@ -1,0 +1,28 @@
+# =====================================================================
+# Caddy emite e renova o certificado HTTPS sozinho, via Let's Encrypt.
+# Não há nada a configurar nem a lembrar de renovar.
+#
+# Pré-requisito: o domínio de DOMINIO precisa apontar para o IP do VPS
+# antes de subir, senão a emissão do certificado falha.
+# =====================================================================
+
+{$DOMINIO} {
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy app:3000
+
+	log {
+		output file /data/acesso.log {
+			roll_size 20mb
+			roll_keep 10
+		}
+	}
+}

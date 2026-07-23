@@ -1,0 +1,79 @@
+name: disney-expert
+
+# =====================================================================
+# DISNEY EXPERT · Infraestrutura
+#
+# Três serviços: banco, aplicação e proxy.
+# O banco NÃO publica porta para fora. Ele só é alcançável pela rede
+# interna do Docker, o que evita o erro mais comum em VPS, que é deixar
+# o PostgreSQL exposto na internet.
+#
+# Subir tudo:      docker compose up -d
+# Ver o que roda:  docker compose ps
+# Ler os registros: docker compose logs -f app
+# =====================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: America/Sao_Paulo
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # Arquivos .sql desta pasta rodam sozinhos na primeira inicialização.
+      # Coloque aqui o schema_disney_expert.sql.
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - interna
+
+  app:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      TZ: America/Sao_Paulo
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    networks:
+      - interna
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - interna
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  interna:
+    driver: bridge
