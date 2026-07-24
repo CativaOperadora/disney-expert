@@ -419,3 +419,268 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* =====================================================================
+   PAINEL INTERNO
+   Mesma paleta, densidade maior. Aqui a especialista trabalha o dia
+   inteiro, então prioriza varredura rápida em vez de respiro.
+   ===================================================================== */
+
+.painel {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+.painel-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.painel-titulo { font-size: 26px; line-height: 1.2; }
+.painel-sub { color: var(--noite-clara); font-size: 15px; }
+
+.voltar-link {
+  display: inline-block;
+  color: var(--noite-clara);
+  text-decoration: none;
+  font-size: 15px;
+  margin-bottom: 18px;
+}
+.voltar-link:hover { color: var(--noite); }
+
+/* --- abas ----------------------------------------------------------- */
+
+.abas {
+  display: flex;
+  gap: 22px;
+  border-bottom: 1px solid var(--linha);
+  margin-bottom: 22px;
+}
+
+.aba {
+  padding: 9px 0;
+  color: var(--noite-clara);
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.aba.ativa { color: var(--noite); border-bottom-color: var(--dourado); }
+
+/* --- cartões da fila ------------------------------------------------ */
+
+.cartoes { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.cartao {
+  display: block;
+  padding: 16px 18px;
+  background: var(--branco);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.cartao:hover { border-color: var(--noite-clara); }
+
+.cartao-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.cartao-protocolo {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  color: var(--noite-clara);
+  letter-spacing: 0.04em;
+}
+
+.cartao-nome { font-size: 18px; font-weight: 500; margin-bottom: 3px; }
+
+.cartao-linha { font-size: 15px; color: var(--noite-media); }
+
+.cartao-rodape {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--noite-clara);
+}
+
+.cartao-alerta {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--linha);
+  font-size: 13px;
+  color: #8a6410;
+}
+
+/* --- etiquetas de status -------------------------------------------- */
+
+.etiqueta {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: #eeedea;
+  color: #55524b;
+}
+
+.e-novo                 { background: #e7eefa; color: #23477f; }
+.e-triagem              { background: #fdf1f0; color: #8f2c25; }
+.e-em_analise           { background: var(--dourado-fundo); color: #7a5609; }
+.e-consultoria_entregue { background: #e6f2ec; color: #1c5c40; }
+.e-com_agencia          { background: #e6f2ec; color: #1c5c40; }
+.e-follow_up            { background: var(--dourado-fundo); color: #7a5609; }
+.e-ganho                { background: #d9efe2; color: #145136; }
+.e-perdido              { background: #f0efec; color: #6c6961; }
+.e-pendente             { background: #f0efec; color: #6c6961; }
+.e-enviado, .e-entregue { background: #e6f2ec; color: #1c5c40; }
+.e-bounce, .e-falha     { background: var(--erro-fundo); color: var(--erro); }
+
+.selo-select {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--noite);
+  color: var(--branco);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* --- blocos do detalhe ---------------------------------------------- */
+
+.detalhe-topo { margin-bottom: 24px; }
+
+.caixa {
+  background: var(--branco);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+
+.caixa-titulo {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--noite-clara);
+  margin-bottom: 14px;
+}
+
+.dupla { display: flex; flex-wrap: wrap; gap: 26px; }
+.dupla > div { min-width: 190px; }
+
+.dado-rotulo {
+  display: block;
+  font-size: 13px;
+  color: var(--noite-clara);
+  margin-bottom: 1px;
+}
+
+.dado-valor { display: block; font-size: 16px; }
+
+.dado-link {
+  display: block;
+  font-size: 15px;
+  color: var(--noite-media);
+}
+
+.nota {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linha);
+  font-size: 13px;
+  color: var(--noite-clara);
+}
+
+/* --- briefing ------------------------------------------------------- */
+
+.briefing { display: flex; flex-direction: column; }
+
+.briefing-item {
+  display: flex;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f2f1ec;
+}
+
+.briefing-item:last-child { border-bottom: none; }
+
+.briefing-item dt {
+  flex: 0 0 45%;
+  font-size: 14px;
+  color: var(--noite-clara);
+}
+
+.briefing-item dd { flex: 1; font-size: 16px; }
+
+/* --- listas e linha do tempo ---------------------------------------- */
+
+.lista-simples { list-style: none; }
+
+.lista-simples li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 0;
+  border-bottom: 1px solid #f2f1ec;
+  font-size: 15px;
+}
+
+.lista-simples li:last-child { border-bottom: none; }
+
+.tempo { list-style: none; }
+
+.tempo li {
+  padding: 11px 0 11px 16px;
+  border-left: 2px solid var(--linha);
+  position: relative;
+}
+
+.tempo li::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 17px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--linha-forte);
+}
+
+.tempo-quando {
+  font-size: 12px;
+  color: var(--noite-clara);
+  margin-right: 10px;
+}
+
+.tempo-tipo { font-size: 14px; font-weight: 500; }
+.tempo-texto { font-size: 15px; color: var(--noite-media); margin-top: 3px; }
+
+.vazio {
+  padding: 50px 20px;
+  text-align: center;
+  color: var(--noite-clara);
+  border: 1px dashed var(--linha-forte);
+  border-radius: var(--raio);
+}
+
+@media (max-width: 560px) {
+  .briefing-item { flex-direction: column; gap: 2px; }
+  .briefing-item dt { flex: none; }
+}
