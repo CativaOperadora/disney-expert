@@ -98,13 +98,12 @@ export async function processarFila(): Promise<{ enviados: number; falhas: numbe
         where id = ${p.id}
       `;
 
-      // Falha definitiva não pode passar em silêncio: a solicitação volta
-      // para a triagem, onde alguém precisa olhar.
+      // Falha definitiva não pode passar em silêncio: o cartão passa a
+      // exibir a tarja de e-mail não entregue no quadro da especialista.
+      // A solicitação não muda de coluna: o cartão passa a exibir a tarja
+      // "e-mail não entregue" e sobe na fila. O alerta continua existindo
+      // sem embaralhar o quadro da especialista.
       if (desistiu) {
-        await sql`
-          update solicitacoes set status = 'triagem'
-          where id = ${p.solicitacao_id} and status in ('novo', 'triagem')
-        `;
         await sql`
           insert into eventos (solicitacao_id, tipo, descricao)
           values (

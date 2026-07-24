@@ -16,7 +16,7 @@
  * ler corretamente registros antigos depois que o formulário evoluir.
  */
 
-export const VERSAO_FORMULARIO = 2;
+export const VERSAO_FORMULARIO = 3;
 
 export type TipoCampo =
   | 'texto'
@@ -46,11 +46,36 @@ export interface Pergunta {
 }
 
 export const PASSOS = [
-  { numero: 1, titulo: 'Seus dados',    descricao: 'Para o consultor falar com você' },
-  { numero: 2, titulo: 'Quem vai',      descricao: 'A composição do grupo' },
-  { numero: 3, titulo: 'Quando e como', descricao: 'Datas, origem e duração' },
-  { numero: 4, titulo: 'Hospedagem',    descricao: 'Onde e como ficar' },
-  { numero: 5, titulo: 'Os parques',    descricao: 'O que não pode faltar' },
+  {
+    numero: 1,
+    titulo: 'Dados pessoais',
+    curto: 'Você',
+    descricao: 'Para o seu consultor falar com você',
+  },
+  {
+    numero: 2,
+    titulo: 'Quem irá viajar?',
+    curto: 'O grupo',
+    descricao: 'A composição da viagem',
+  },
+  {
+    numero: 3,
+    titulo: 'Data e origem',
+    curto: 'Quando',
+    descricao: 'Período, embarque e duração',
+  },
+  {
+    numero: 4,
+    titulo: 'Hospedagens',
+    curto: 'Onde ficar',
+    descricao: 'O estilo que combina com vocês',
+  },
+  {
+    numero: 5,
+    titulo: 'Parques e deslocamento',
+    curto: 'Parques',
+    descricao: 'O que não pode faltar',
+  },
 ] as const;
 
 export const PERGUNTAS: Pergunta[] = [

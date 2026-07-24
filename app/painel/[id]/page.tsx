@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
-import { PERGUNTAS } from '@/lib/perguntas';
+import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
+import { ROTULO_STATUS, calcularSla } from '@/lib/sla';
 import Acoes from './Acoes';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,8 @@ interface Detalhe {
   cliente_whatsapp: string;
   respostas: Record<string, any>;
   criado_em: string;
+  primeiro_atendimento_em: string | null;
+  sla_horas: number | null;
   agente_nome: string | null;
   agente_email: string | null;
   agencia_nome: string | null;
@@ -69,7 +72,8 @@ export default async function PaginaDetalhe({
     select
       s.id, s.protocolo, s.status, s.completude,
       s.cliente_nome, s.cliente_email, s.cliente_whatsapp,
-      s.respostas, s.criado_em,
+      s.respostas, s.criado_em, s.primeiro_atendimento_em,
+      ag.sla_horas,
       a.nome  as agente_nome,
       a.email as agente_email,
       ag.nome as agencia_nome,
@@ -94,16 +98,22 @@ export default async function PaginaDetalhe({
   `;
 
   // O briefing segue a ordem do formulário, não a ordem do JSON.
-  const blocos = [1, 2, 3, 4, 5].map((passo) => ({
-    passo,
+  const blocos = PASSOS.map((passo) => ({
+    titulo: passo.titulo,
     itens: PERGUNTAS.filter(
       (p) =>
-        p.passo === passo &&
+        p.passo === passo.numero &&
         p.tipo !== 'aceite' &&
         s.respostas[p.id] !== undefined &&
         s.respostas[p.id] !== '',
     ).map((p) => ({ rotulo: p.rotulo, valor: formatar(s.respostas[p.id]) })),
   })).filter((b) => b.itens.length > 0);
+
+  const sla = calcularSla(
+    s.criado_em,
+    s.sla_horas ?? 48,
+    s.primeiro_atendimento_em,
+  );
 
   return (
     <main className="painel">
@@ -113,11 +123,20 @@ export default async function PaginaDetalhe({
 
       <header className="detalhe-topo">
         <span className="cartao-protocolo">{s.protocolo}</span>
-        <h1 className="display painel-titulo">{s.cliente_nome}</h1>
+        <h1 className="display painel-titulo">
+          {s.agente_nome ?? 'Agente não identificado'}
+        </h1>
         <p className="painel-sub">
-          Recebido em {QUANDO.format(new Date(s.criado_em))} · briefing{' '}
-          {s.completude}% preenchido
+          {s.agencia_nome ?? 'Agência não identificada'} ·{' '}
+          {ROTULO_STATUS[s.status] ?? s.status}
         </p>
+        <div className={`sla-detalhe sla-${sla.faixa}`}>
+          <span className="sla-texto">{sla.rotulo}</span>
+          <span className="sla-prazo">
+            prazo de {s.sla_horas ?? 48}h · recebido em{' '}
+            {QUANDO.format(new Date(s.criado_em))}
+          </span>
+        </div>
       </header>
 
       <section className="caixa">
@@ -154,6 +173,10 @@ export default async function PaginaDetalhe({
         <h2 className="caixa-titulo">Cliente final</h2>
         <div className="dupla">
           <div>
+            <span className="dado-rotulo">Nome</span>
+            <span className="dado-valor">{s.cliente_nome}</span>
+          </div>
+          <div>
             <span className="dado-rotulo">E-mail</span>
             <span className="dado-valor">{s.cliente_email}</span>
           </div>
@@ -165,8 +188,8 @@ export default async function PaginaDetalhe({
       </section>
 
       {blocos.map((b) => (
-        <section className="caixa" key={b.passo}>
-          <h2 className="caixa-titulo">Briefing · passo {b.passo}</h2>
+        <section className="caixa" key={b.titulo}>
+          <h2 className="caixa-titulo">{b.titulo}</h2>
           <dl className="briefing">
             {b.itens.map((i) => (
               <div className="briefing-item" key={i.rotulo}>

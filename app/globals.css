@@ -829,3 +829,65 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* --- SLA ------------------------------------------------------------- */
+
+.sla { margin-top: 10px; }
+
+.sla-barra {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--borda);
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.sla-barra span { display: block; height: 100%; border-radius: 2px; }
+
+.sla-texto { font-size: 11px; font-weight: 500; }
+
+.sla-tranquilo .sla-barra span { background: #2e7d5b; }
+.sla-tranquilo .sla-texto      { color: #2e7d5b; }
+
+.sla-atencao   .sla-barra span { background: #b8811a; }
+.sla-atencao   .sla-texto      { color: #99691a; }
+
+.sla-urgente   .sla-barra span { background: #c1502d; }
+.sla-urgente   .sla-texto      { color: #a63f21; }
+
+.sla-atrasado  .sla-barra span { background: #b3261e; }
+.sla-atrasado  .sla-texto      { color: #b3261e; font-weight: 600; }
+
+.sla-atendido  .sla-barra span { background: var(--borda-forte); }
+.sla-atendido  .sla-texto      { color: var(--texto-fraco); font-weight: 400; }
+
+.ficha.atrasada { border-color: #e8b4ae; }
+.ficha.atrasada .espera { background: #b3261e; }
+
+.coluna-risco {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a63f21;
+  margin-top: 5px;
+}
+
+.sla-detalhe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+}
+
+.sla-detalhe .sla-texto { font-size: 14px; }
+.sla-prazo { font-size: 12px; color: var(--texto-fraco); }
+
+.barra-info {
+  margin-left: auto;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.82);
+}

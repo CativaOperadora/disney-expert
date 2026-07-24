@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { sessaoValida } from '@/lib/auth';
+import { STATUS, MOTIVOS_PERDA } from '@/lib/sla';
 
 export const runtime = 'nodejs';
 
-const STATUS_VALIDOS = [
-  'novo', 'triagem', 'em_analise', 'consultoria_entregue',
-  'com_agencia', 'follow_up', 'ganho', 'perdido',
-];
-
-const MOTIVOS_VALIDOS = [
-  'sem_retorno_agencia', 'cliente_desistiu',
-  'perdido_concorrencia', 'fora_de_perfil',
-];
+const STATUS_VALIDOS = STATUS.map((s) => s.id) as readonly string[];
+const MOTIVOS_VALIDOS = MOTIVOS_PERDA.map((m) => m[0]) as readonly string[];
 
 export async function POST(
   req: NextRequest,
@@ -38,9 +32,11 @@ export async function POST(
         return NextResponse.json({ erro: 'Status inválido.' }, { status: 400 });
       }
       const motivo =
-        corpo.status === 'perdido' && MOTIVOS_VALIDOS.includes(corpo.motivo)
+        corpo.status === 'venda_perdida' && MOTIVOS_VALIDOS.includes(corpo.motivo)
           ? corpo.motivo
-          : null;
+          : corpo.status === 'venda_perdida'
+            ? 'sem_retorno_agencia'
+            : null;
 
       const [antes] = await sql<{ status: string }[]>`
         select status from solicitacoes where id = ${id}
@@ -49,10 +45,16 @@ export async function POST(
         return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
       }
 
+      // Sair de "nova_solicitacao" pela primeira vez para o relógio do SLA.
       await sql`
         update solicitacoes
         set status = ${corpo.status}::status_solicitacao,
-            motivo_perda = ${motivo}::motivo_perda
+            motivo_perda = ${motivo}::motivo_perda,
+            primeiro_atendimento_em = case
+              when ${corpo.status} <> 'nova_solicitacao'
+               and primeiro_atendimento_em is null then now()
+              else primeiro_atendimento_em
+            end
         where id = ${id}
       `;
 

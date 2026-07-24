@@ -3,13 +3,13 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { STATUS, calcularSla } from '@/lib/sla';
 
 export interface Cartao {
   id: string;
   protocolo: string;
   status: string;
   completude: number;
-  cliente_nome: string;
   data_prevista_texto: string | null;
   total_pessoas: number | null;
   total_criancas: number | null;
@@ -17,50 +17,12 @@ export interface Cartao {
   agencia_tier: string | null;
   agente_nome: string | null;
   criado_em: string;
-  parado_desde: string;
+  sla_horas: number;
+  primeiro_atendimento_em: string | null;
   email_falhou: boolean;
 }
 
-const COLUNAS = [
-  { id: 'novo', titulo: 'Novo', nota: 'Chegou, ninguém olhou' },
-  { id: 'triagem', titulo: 'Triagem', nota: 'Falta dado ou o link falhou' },
-  { id: 'em_analise', titulo: 'Em análise', nota: 'Estudando o briefing' },
-  { id: 'consultoria_entregue', titulo: 'Consultoria entregue', nota: 'Orientação enviada' },
-  { id: 'com_agencia', titulo: 'Com a agência', nota: 'Montando a proposta' },
-  { id: 'follow_up', titulo: 'Follow-up', nota: 'Aguardando retorno' },
-];
-
-const COLUNAS_FIM = [
-  { id: 'ganho', titulo: 'Reserva confirmada', nota: '' },
-  { id: 'perdido', titulo: 'Perdido', nota: '' },
-  { id: 'duplicada', titulo: 'Duplicada', nota: '' },
-];
-
-/** Dias inteiros desde que o cartão entrou na coluna atual. */
-function diasParado(iso: string) {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-}
-
-function faixaEspera(dias: number): 0 | 1 | 2 | 3 {
-  if (dias < 1) return 0;
-  if (dias < 3) return 1;
-  if (dias < 7) return 2;
-  return 3;
-}
-
-function textoEspera(dias: number) {
-  if (dias < 1) return 'hoje';
-  if (dias === 1) return '1 dia';
-  return `${dias} dias`;
-}
-
-export default function Quadro({
-  cartoes: iniciais,
-  encerradas,
-}: {
-  cartoes: Cartao[];
-  encerradas: boolean;
-}) {
+export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
   const router = useRouter();
   const [, iniciarTransicao] = useTransition();
   const [cartoes, setCartoes] = useState(iniciais);
@@ -68,15 +30,19 @@ export default function Quadro({
   const [alvo, setAlvo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  const colunas = encerradas ? COLUNAS_FIM : COLUNAS;
-
   async function mover(id: string, destino: string) {
     const anterior = cartoes;
-    // Move na tela primeiro. Se o servidor recusar, volta.
     setCartoes((c) =>
       c.map((x) =>
         x.id === id
-          ? { ...x, status: destino, parado_desde: new Date().toISOString() }
+          ? {
+              ...x,
+              status: destino,
+              primeiro_atendimento_em:
+                destino !== 'nova_solicitacao' && !x.primeiro_atendimento_em
+                  ? new Date().toISOString()
+                  : x.primeiro_atendimento_em,
+            }
           : x,
       ),
     );
@@ -101,12 +67,24 @@ export default function Quadro({
       {erro && <div className="faixa-erro">{erro}</div>}
 
       <div className="quadro">
-        {colunas.map((col) => {
-          const doColuna = cartoes.filter((c) => c.status === col.id);
-          const maisParado = doColuna.reduce(
-            (max, c) => Math.max(max, diasParado(c.parado_desde)),
-            0,
-          );
+        {STATUS.map((col) => {
+          const doColuna = cartoes
+            .filter((c) => c.status === col.id)
+            .map((c) => ({
+              ...c,
+              sla: calcularSla(c.criado_em, c.sla_horas, c.primeiro_atendimento_em),
+            }))
+            // Na entrada, quem vence antes aparece primeiro. Nas demais,
+            // o mais recente no topo.
+            .sort((a, b) =>
+              col.id === 'nova_solicitacao'
+                ? a.sla.horasRestantes - b.sla.horasRestantes
+                : +new Date(b.criado_em) - +new Date(a.criado_em),
+            );
+
+          const emRisco = doColuna.filter(
+            (c) => c.sla.faixa === 'urgente' || c.sla.faixa === 'atrasado',
+          ).length;
 
           return (
             <section
@@ -131,82 +109,81 @@ export default function Quadro({
                   <span className="coluna-conta">{doColuna.length}</span>
                 </div>
                 {col.nota && <p className="coluna-nota">{col.nota}</p>}
-                {maisParado >= 3 && (
-                  <p className={`coluna-espera nivel-${faixaEspera(maisParado)}`}>
-                    Mais parado: {textoEspera(maisParado)}
+                {emRisco > 0 && (
+                  <p className="coluna-risco">
+                    {emRisco} {emRisco === 1 ? 'em risco' : 'em risco'}
                   </p>
                 )}
               </header>
 
               <div className="coluna-corpo">
-                {doColuna.map((c) => {
-                  const dias = diasParado(c.parado_desde);
-                  return (
-                    <article
-                      key={c.id}
-                      className={`ficha ${arrastando === c.id ? 'movendo' : ''}`}
-                      draggable={!encerradas}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', c.id);
-                        e.dataTransfer.effectAllowed = 'move';
-                        setArrastando(c.id);
-                      }}
-                      onDragEnd={() => {
-                        setArrastando(null);
-                        setAlvo(null);
-                      }}
-                    >
-                      <span
-                        className={`espera nivel-${faixaEspera(dias)}`}
-                        title={`Parado há ${textoEspera(dias)}`}
-                      />
-
-                      <Link href={`/painel/${c.id}`} className="ficha-corpo">
-                        <div className="ficha-topo">
-                          <span className="ficha-protocolo">{c.protocolo}</span>
-                          {c.agencia_tier === 'select' && (
-                            <span className="selo">Select</span>
-                          )}
-                        </div>
-
-                        <h3 className="ficha-nome">{c.cliente_nome}</h3>
-
-                        <p className="ficha-dado">
-                          {c.total_pessoas ?? '?'} pessoas
-                          {c.total_criancas
-                            ? `, ${c.total_criancas} criança${c.total_criancas > 1 ? 's' : ''}`
-                            : ''}
-                        </p>
-                        {c.data_prevista_texto && (
-                          <p className="ficha-dado">{c.data_prevista_texto}</p>
+                {doColuna.map((c) => (
+                  <article
+                    key={c.id}
+                    className={`ficha ${arrastando === c.id ? 'movendo' : ''} ${
+                      c.sla.faixa === 'atrasado' ? 'atrasada' : ''
+                    }`}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', c.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                      setArrastando(c.id);
+                    }}
+                    onDragEnd={() => {
+                      setArrastando(null);
+                      setAlvo(null);
+                    }}
+                  >
+                    <Link href={`/painel/${c.id}`} className="ficha-corpo">
+                      <div className="ficha-topo">
+                        <span className="ficha-protocolo">{c.protocolo}</span>
+                        {c.agencia_tier === 'select' && (
+                          <span className="selo">Select</span>
                         )}
+                      </div>
 
-                        <p className="ficha-agencia">
-                          {c.agencia_nome ?? 'Agência não identificada'}
-                        </p>
+                      {/* Quem importa para a Juliana é o agente. O nome do
+                          cliente final aparece só ao abrir o cartão. */}
+                      <h3 className="ficha-nome">
+                        {c.agente_nome ?? 'Agente não identificado'}
+                      </h3>
+                      <p className="ficha-agencia">
+                        {c.agencia_nome ?? 'Agência não identificada'}
+                      </p>
 
+                      <p className="ficha-dado">
+                        {c.total_pessoas ?? '?'} pessoas
+                        {c.total_criancas
+                          ? `, ${c.total_criancas} criança${c.total_criancas > 1 ? 's' : ''}`
+                          : ''}
+                        {c.data_prevista_texto ? ` · ${c.data_prevista_texto}` : ''}
+                      </p>
+
+                      <div className={`sla sla-${c.sla.faixa}`}>
+                        <div className="sla-barra">
+                          <span style={{ width: `${c.sla.consumido * 100}%` }} />
+                        </div>
+                        <span className="sla-texto">{c.sla.rotulo}</span>
+                      </div>
+
+                      {(c.completude < 100 || c.email_falhou) && (
                         <footer className="ficha-rodape">
-                          <span className={`tempo-selo nivel-${faixaEspera(dias)}`}>
-                            {textoEspera(dias)}
-                          </span>
+                          {c.email_falhou && (
+                            <span className="aviso-selo grave">E-mail não entregue</span>
+                          )}
                           {c.completude < 100 && (
                             <span className="aviso-selo">
                               {c.completude}% do briefing
                             </span>
                           )}
-                          {c.email_falhou && (
-                            <span className="aviso-selo grave">E-mail voltou</span>
-                          )}
                         </footer>
-                      </Link>
-                    </article>
-                  );
-                })}
+                      )}
+                    </Link>
+                  </article>
+                ))}
 
                 {doColuna.length === 0 && (
-                  <div className="coluna-vazia">
-                    {encerradas ? 'Nada aqui' : 'Arraste um cartão para cá'}
-                  </div>
+                  <div className="coluna-vazia">Arraste um cartão para cá</div>
                 )}
               </div>
             </section>
@@ -214,12 +191,11 @@ export default function Quadro({
         })}
       </div>
 
-      {!encerradas && (
-        <p className="dica">
-          Arraste os cartões entre as colunas para mudar a situação. No celular,
-          abra o cartão e altere por lá.
-        </p>
-      )}
+      <p className="dica">
+        Arraste os cartões entre as colunas para mudar a situação. O prazo de
+        atendimento é de 24 horas para agências Select e 48 horas para as
+        demais, contadas a partir da chegada da solicitação.
+      </p>
     </>
   );
 }

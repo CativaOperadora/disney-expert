@@ -2,24 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const STATUS = [
-  ['novo', 'Novo'],
-  ['triagem', 'Triagem'],
-  ['em_analise', 'Em análise'],
-  ['consultoria_entregue', 'Consultoria entregue'],
-  ['com_agencia', 'Com a agência'],
-  ['follow_up', 'Follow-up'],
-  ['ganho', 'Reserva confirmada'],
-  ['perdido', 'Perdido'],
-] as const;
-
-const MOTIVOS = [
-  ['sem_retorno_agencia', 'Sem retorno da agência'],
-  ['cliente_desistiu', 'Cliente desistiu'],
-  ['perdido_concorrencia', 'Perdido para concorrência'],
-  ['fora_de_perfil', 'Fora de perfil'],
-] as const;
+import { STATUS, MOTIVOS_PERDA } from '@/lib/sla';
 
 export default function Acoes({
   id,
@@ -69,13 +52,13 @@ export default function Acoes({
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          {STATUS.map(([v, r]) => (
-            <option key={v} value={v}>{r}</option>
+          {STATUS.map((s) => (
+            <option key={s.id} value={s.id}>{s.titulo}</option>
           ))}
         </select>
       </div>
 
-      {status === 'perdido' && (
+      {status === 'venda_perdida' && (
         <div className="campo">
           <label className="rotulo" htmlFor="motivo">Motivo</label>
           <select
@@ -84,7 +67,7 @@ export default function Acoes({
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
           >
-            {MOTIVOS.map(([v, r]) => (
+            {MOTIVOS_PERDA.map(([v, r]) => (
               <option key={v} value={v}>{r}</option>
             ))}
           </select>
@@ -95,7 +78,7 @@ export default function Acoes({
         className="botao botao-principal"
         disabled={salvando || status === statusAtual}
         onClick={() =>
-          chamar({ acao: 'status', status, motivo: status === 'perdido' ? motivo : null })
+          chamar({ acao: 'status', status, motivo: status === 'venda_perdida' ? motivo : null })
         }
       >
         {salvando ? 'Salvando…' : 'Salvar situação'}
