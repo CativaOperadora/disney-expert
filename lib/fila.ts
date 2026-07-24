@@ -1,0 +1,154 @@
+import { sql } from './db';
+import { enviar } from './email';
+import {
+  briefingAgente,
+  confirmacaoCliente,
+  copiaEspecialista,
+  type DadosBriefing,
+} from './briefing';
+
+/**
+ * Processa a fila de envios.
+ *
+ * Chamado logo após o formulário ser recebido, e também por um agendamento
+ * a cada poucos minutos para tratar as falhas.
+ *
+ * A trava é feita no próprio UPDATE: só pega quem ainda está pendente e
+ * já marca como 'enviando' na mesma operação. Duas execuções simultâneas
+ * não disputam a mesma linha.
+ */
+
+const MAX_TENTATIVAS = 4;
+const LOTE = 20;
+
+interface Pendente {
+  id: string;
+  solicitacao_id: string;
+  tipo: string;
+  destinatario: string;
+  tentativas: number;
+}
+
+export async function processarFila(): Promise<{ enviados: number; falhas: number }> {
+  if (!process.env.EMAIL_API_KEY) {
+    console.warn('[fila] EMAIL_API_KEY ausente, nada a enviar');
+    return { enviados: 0, falhas: 0 };
+  }
+
+  const pendentes = await sql<Pendente[]>`
+    update envios_email
+    set status = 'enviando', tentativas = tentativas + 1
+    where id in (
+      select id from envios_email
+      where status in ('pendente', 'falha')
+        and tentativas < ${MAX_TENTATIVAS}
+        and destinatario <> ''
+      order by criado_em
+      limit ${LOTE}
+      for update skip locked
+    )
+    returning id, solicitacao_id, tipo, destinatario, tentativas
+  `;
+
+  let enviados = 0;
+  let falhas = 0;
+
+  for (const p of pendentes) {
+    try {
+      const dados = await carregarDados(p.solicitacao_id);
+      if (!dados) throw new Error('Solicitação não encontrada');
+
+      const base =
+        p.tipo === 'briefing_agente'
+          ? briefingAgente(dados)
+          : p.tipo === 'confirmacao_cliente'
+            ? confirmacaoCliente(dados)
+            : copiaEspecialista(dados);
+
+      const idProvedor = await enviar({ ...base, para: p.destinatario });
+
+      await sql`
+        update envios_email
+        set status = 'enviado',
+            provider = 'resend',
+            provider_message_id = ${idProvedor},
+            enviado_em = now(),
+            erro = null
+        where id = ${p.id}
+      `;
+
+      await sql`
+        insert into eventos (solicitacao_id, tipo, descricao, payload)
+        values (
+          ${p.solicitacao_id}, 'email_disparado',
+          ${`${p.tipo.replace(/_/g, ' ')} para ${p.destinatario}`},
+          ${sql.json({ envio: p.id, provedor: idProvedor })}
+        )
+      `;
+      enviados++;
+    } catch (e: any) {
+      falhas++;
+      const desistiu = p.tentativas >= MAX_TENTATIVAS;
+      const mensagem = String(e?.message ?? e).slice(0, 500);
+
+      await sql`
+        update envios_email
+        set status = ${desistiu ? 'falha' : 'pendente'},
+            erro = ${mensagem}
+        where id = ${p.id}
+      `;
+
+      // Falha definitiva não pode passar em silêncio: a solicitação volta
+      // para a triagem, onde alguém precisa olhar.
+      if (desistiu) {
+        await sql`
+          update solicitacoes set status = 'triagem'
+          where id = ${p.solicitacao_id} and status in ('novo', 'triagem')
+        `;
+        await sql`
+          insert into eventos (solicitacao_id, tipo, descricao)
+          values (
+            ${p.solicitacao_id}, 'email_bounce',
+            ${`Não foi possível entregar para ${p.destinatario}: ${mensagem}`}
+          )
+        `;
+      }
+      console.error('[fila] falha no envio', p.id, mensagem);
+    }
+  }
+
+  return { enviados, falhas };
+}
+
+async function carregarDados(id: string): Promise<DadosBriefing | null> {
+  const [s] = await sql<any[]>`
+    select
+      s.protocolo, s.cliente_nome, s.cliente_email, s.cliente_whatsapp,
+      s.data_prevista_texto, s.total_pessoas, s.total_criancas,
+      s.completude, s.respostas, s.id,
+      coalesce(a.nome, 'consultor')          as agente_nome,
+      coalesce(ag.nome, 'sua agência')       as agencia_nome
+    from solicitacoes s
+    left join agentes  a  on a.id  = s.agente_id
+    left join agencias ag on ag.id = s.agencia_id
+    where s.id = ${id}
+  `;
+  if (!s) return null;
+
+  const base = process.env.APP_URL?.replace(/\/$/, '');
+
+  return {
+    protocolo: s.protocolo,
+    clienteNome: s.cliente_nome,
+    clienteEmail: s.cliente_email,
+    clienteWhatsapp: s.cliente_whatsapp,
+    dataPrevistaTexto: s.data_prevista_texto,
+    totalPessoas: s.total_pessoas,
+    totalCriancas: s.total_criancas,
+    completude: s.completude,
+    respostas: s.respostas,
+    agenteNome: s.agente_nome,
+    agenciaNome: s.agencia_nome,
+    urlPainel: base ? `${base}/painel/${s.id}` : undefined,
+  };
+}

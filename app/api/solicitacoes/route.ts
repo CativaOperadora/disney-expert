@@ -7,6 +7,7 @@ import {
   projetarColunas,
   calcularCompletude,
 } from '@/lib/perguntas';
+import { processarFila } from '@/lib/fila';
 
 export const runtime = 'nodejs';
 
@@ -135,6 +136,11 @@ export async function POST(req: NextRequest) {
         (${criada.id}, 'copia_especialista',  ${process.env.EMAIL_ESPECIALISTA ?? ''}, ${criada.id + ':copia_especialista'})
       on conflict (idempotency_key) do nothing
     `;
+
+    // Dispara a fila sem segurar a resposta. O cliente já pode ver a tela
+    // de conclusão: o dado está salvo e o envio acontece em seguida.
+    // Se falhar aqui, a retentativa agendada resolve.
+    processarFila().catch((e) => console.error('[solicitacoes] fila', e));
 
     return NextResponse.json({ protocolo: criada.protocolo }, { status: 201 });
   } catch (e) {

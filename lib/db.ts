@@ -1,11 +1,11 @@
 import postgres from 'postgres';
 
 /**
- * Conexão com o PostgreSQL.
+ * Conexão única com o PostgreSQL.
  *
- * O postgres.js é preguiçoso: só abre soquete na primeira consulta.
- * Por isso não pode haver validação no carregamento do módulo, senão a
- * compilação quebra, já que DATABASE_URL só existe quando o container roda.
+ * Em produção, DATABASE_URL é montada pelo docker-compose apontando para
+ * o serviço `db` na rede interna do Docker. O banco não é acessível de
+ * fora do servidor, por desenho.
  */
 
 const URL_BANCO =
@@ -22,12 +22,8 @@ export const sql =
     idle_timeout: 20,
     connect_timeout: 10,
     types: {
-      date: {
-        to: 1082,
-        from: [1082],
-        serialize: (x: any) => x,
-        parse: (x: any) => x,
-      },
+      // Devolve date como texto puro, sem conversão de fuso.
+      date: { to: 1082, from: [1082], serialize: (x: any) => x, parse: (x: any) => x },
     },
   });
 
