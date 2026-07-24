@@ -33,6 +33,14 @@ function valor(v: any): string {
   if (Array.isArray(v)) return v.join(', ');
   if (v === true) return 'Sim';
   if (v === false) return 'Não';
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [a, m, d] = v.split('-');
+    return `${d}/${m}/${a}`;
+  }
+  if (typeof v === 'string' && /^\d{4}-\d{2}$/.test(v)) {
+    const [a, m] = v.split('-');
+    return `${m}/${a}`;
+  }
   return String(v ?? '');
 }
 
@@ -60,7 +68,7 @@ function moldura(titulo: string, corpo: string) {
 <tr><td style="padding:26px">${corpo}</td></tr>
 
 <tr><td style="background:#f6f6f4;padding:18px 26px;font:12px/1.5 ${FONTE};color:#7c8894">
-  Cativa Operadora · a gente se importa<br>
+  Cativa Operadora – Orlando Expert<br>
   Mensagem automática do Planejador de Viagem.
 </td></tr>
 
@@ -157,9 +165,8 @@ ${blocos}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
  style="background:#e8f0f7;border-radius:10px;margin-top:28px">
 <tr><td style="padding:16px 18px;font:14px/1.6 ${FONTE};color:#16202b">
-<strong style="color:${AZUL}">Precisa de apoio para montar a proposta?</strong><br>
-Nossa especialista em Disney já recebeu este mesmo briefing e está à disposição.
-Basta responder este e-mail citando o protocolo.</td></tr></table>`,
+A nossa especialista em Orlando também recebeu a sua solicitação e, em até 48 horas,
+entrará em contato com você para iniciar a sua consultoria.</td></tr></table>`,
   );
 
   const texto = [
@@ -174,10 +181,10 @@ Basta responder este e-mail citando o protocolo.</td></tr></table>`,
       (p) => p.passo >= 2 && p.tipo !== 'aceite' && r[p.id] !== undefined,
     ).map((p) => `${p.rotulo}: ${valor(r[p.id])}`),
     '',
-    'Nossa especialista em Disney recebeu o mesmo briefing.',
-    'Responda este e-mail citando o protocolo para receber apoio.',
+    'A nossa especialista em Orlando também recebeu a sua solicitação e, em até',
+    '48 horas, entrará em contato com você para iniciar a sua consultoria.',
     '',
-    'Cativa Operadora',
+    'Cativa Operadora – Orlando Expert',
   ].join('\n');
 
   return {
@@ -223,7 +230,7 @@ Não é preciso responder esta mensagem.</p>`,
     '',
     `Número do atendimento: ${d.protocolo}`,
     '',
-    'Cativa Operadora',
+    'Cativa Operadora – Orlando Expert',
   ].join('\n');
 
   return {
@@ -243,17 +250,14 @@ export function copiaEspecialista(d: DadosBriefing): Mensagem {
 <a href="${d.urlPainel}" style="color:${AZUL};font-weight:600">Abrir no painel</a></p>`
     : '';
 
-  const aviso = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
- style="background:#e8f0f7;border-left:4px solid ${AZUL};border-radius:8px;margin-bottom:20px">
-<tr><td style="padding:13px 16px;font:14px/1.5 ${FONTE};color:#16202b">
-<strong>Cópia interna.</strong> ${escapar(d.agenteNome)}, da ${escapar(d.agenciaNome)},
-recebeu este mesmo briefing. O contato é com a agência, nunca com o cliente final.
-</td></tr></table>${link}`;
-
+  // A tarja "Cópia interna…" foi removida a pedido. Mantemos apenas o
+  // atalho para o painel, quando houver URL configurada.
   return {
     para: '',
     assunto: `[interno] ${base.assunto} · ${d.agenciaNome}`,
-    html: base.html.replace('<h1 style="font:600 22px', aviso + '<h1 style="font:600 22px'),
-    texto: `[CÓPIA INTERNA] Agência: ${d.agenciaNome} · Agente: ${d.agenteNome}\n\n${base.texto}`,
+    html: link
+      ? base.html.replace('<h1 style="font:600 22px', link + '<h1 style="font:600 22px')
+      : base.html,
+    texto: base.texto,
   };
 }

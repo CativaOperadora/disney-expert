@@ -76,12 +76,14 @@ export function calcularSla(
   };
 }
 
+// A coluna "Em atendimento" foi removida do fluxo. O id 'consultoria_realizada'
+// é mantido (preserva o enum do banco e os registros existentes); apenas o
+// rótulo passou a "Em consultoria", deixando claro que ainda está em andamento.
 export const STATUS = [
-  { id: 'nova_solicitacao',      titulo: 'Nova solicitação',      nota: 'Chegou, ninguém assumiu' },
-  { id: 'em_atendimento',        titulo: 'Em atendimento',        nota: 'Juliana está analisando' },
-  { id: 'consultoria_realizada', titulo: 'Consultoria realizada', nota: 'Orientação entregue à agência' },
-  { id: 'venda_finalizada',      titulo: 'Venda finalizada',      nota: 'Reserva confirmada' },
-  { id: 'venda_perdida',         titulo: 'Venda perdida',         nota: '' },
+  { id: 'nova_solicitacao',      titulo: 'Nova solicitação',   nota: 'Chegou, ninguém assumiu' },
+  { id: 'consultoria_realizada', titulo: 'Em consultoria',     nota: 'Consultoria em andamento com a agência' },
+  { id: 'venda_finalizada',      titulo: 'Venda finalizada',   nota: 'Reserva confirmada' },
+  { id: 'venda_perdida',         titulo: 'Venda perdida',      nota: '' },
 ] as const;
 
 export const ROTULO_STATUS: Record<string, string> = Object.fromEntries(

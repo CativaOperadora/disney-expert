@@ -42,6 +42,11 @@ export default async function PaginaFormulario({
 
   return (
     <div className="tela-form">
+      {/* No desktop, a frase "Sua jornada mágica" já vem embutida na arte
+          de fundo (capa-fundo.jpg) e esta coluna fica apenas como espaço.
+          No celular o fundo é cortado e não mostra a frase, então aí a
+          imagem abaixo aparece. O CSS alterna qual das duas fica visível
+          para nunca duplicar. */}
       <aside className="arte" aria-hidden="true">
         <img src="/frase-jornada.png" alt="" className="arte-frase" />
       </aside>

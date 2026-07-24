@@ -24,9 +24,14 @@ services:
       TZ: America/Sao_Paulo
     volumes:
       - db_data:/var/lib/postgresql/data
-      # Arquivos .sql desta pasta rodam sozinhos na primeira inicialização.
-      # Coloque aqui o schema_disney_expert.sql.
-      - ./sql:/docker-entrypoint-initdb.d:ro
+      # Init automático na PRIMEIRA subida, em ordem determinística:
+      # schema base e depois as migrações. Os seeds de demonstração NÃO
+      # entram aqui (são só para homologação — ver infra/DEPLOY.md).
+      - ./sql/schema_disney_expert.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/migracao_002_status_sla.sql:/docker-entrypoint-initdb.d/02_status_sla.sql:ro
+      - ./sql/migracao_003_id_reserva_crm.sql:/docker-entrypoint-initdb.d/03_id_reserva.sql:ro
+      - ./sql/migracao_004_bi_financeiro.sql:/docker-entrypoint-initdb.d/04_bi.sql:ro
+      - ./sql/migracao_005_portal_agentes.sql:/docker-entrypoint-initdb.d/05_portal.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s

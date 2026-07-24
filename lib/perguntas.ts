@@ -23,9 +23,11 @@ export type TipoCampo =
   | 'email'
   | 'telefone'
   | 'numero'
+  | 'cidade'       // busca inteligente de cidade brasileira
   | 'escolha'      // uma opção
   | 'multipla'     // várias opções
   | 'mes_ano'      // período previsto da viagem
+  | 'data'         // dia exato da viagem
   | 'aceite';      // caixa de consentimento
 
 export interface Pergunta {
@@ -144,19 +146,41 @@ export const PERGUNTAS: Pergunta[] = [
 
   // ---------------------------------------------------------------- passo 3
   {
+    id: 'tem_data_definida',
+    passo: 3,
+    rotulo: 'Você já tem a data da viagem definida?',
+    tipo: 'escolha',
+    obrigatoria: true,
+    opcoes: [
+      'Sim, já tenho a data definida',
+      'Ainda não, tenho só uma previsão',
+    ],
+  },
+  {
+    id: 'data_exata',
+    passo: 3,
+    rotulo: 'Qual o dia da viagem?',
+    ajuda: 'Selecione a data de embarque.',
+    tipo: 'data',
+    obrigatoria: true,
+    condicao: { pergunta: 'tem_data_definida', valores: ['Sim, já tenho a data definida'] },
+  },
+  {
     id: 'data_prevista',
     passo: 3,
     rotulo: 'Qual a data prevista para viver essa experiência?',
-    ajuda: 'Se ainda não tem data fechada, informe o mês que tem em mente.',
+    ajuda: 'Informe o mês e o ano que você tem em mente.',
     tipo: 'mes_ano',
     obrigatoria: true,
+    condicao: { pergunta: 'tem_data_definida', valores: ['Ainda não, tenho só uma previsão'] },
     coluna: 'data_prevista',
   },
   {
     id: 'origem_embarque',
     passo: 3,
     rotulo: 'De qual cidade vocês embarcam?',
-    tipo: 'texto',
+    ajuda: 'Comece a digitar e selecione a cidade na lista.',
+    tipo: 'cidade',
     obrigatoria: true,
     coluna: 'origem_embarque',
   },
@@ -326,15 +350,24 @@ export function paraNumero(v: unknown): number | null {
 }
 
 /**
- * O total do grupo é a soma, nunca um campo digitado.
- * Assim não existe a dúvida de saber se as crianças estavam ou não
- * incluídas no total informado.
+ * Campos que representam uma quantidade de passageiros. O total de
+ * viajantes é a soma de TODOS eles, nunca de um só. Para acrescentar uma
+ * categoria nova no futuro (por exemplo, bebês), basta incluir o id aqui
+ * e a soma passa a considerá-la automaticamente.
+ */
+export const CAMPOS_PESSOAS = ['quantos_adultos', 'quantas_criancas'] as const;
+
+/**
+ * O total do grupo é a soma de todas as categorias, nunca um campo
+ * digitado. Assim não existe a dúvida de saber se as crianças estavam ou
+ * não incluídas no total informado.
  */
 export function somarPessoas(respostas: Record<string, any>): number | null {
-  const adultos = paraNumero(respostas.quantos_adultos);
-  const criancas = paraNumero(respostas.quantas_criancas);
-  if (adultos === null) return null;
-  return adultos + (criancas ?? 0);
+  const quantidades = CAMPOS_PESSOAS
+    .map((id) => paraNumero(respostas[id]))
+    .filter((n): n is number => n !== null);
+  if (quantidades.length === 0) return null;
+  return quantidades.reduce((soma, n) => soma + n, 0);
 }
 
 /**

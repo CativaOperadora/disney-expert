@@ -15,6 +15,9 @@ interface Detalhe {
   cliente_nome: string;
   cliente_email: string;
   cliente_whatsapp: string;
+  id_reserva: string | null;
+  valor_total_venda: string | null;
+  responsavel_id: string | null;
   respostas: Record<string, any>;
   criado_em: string;
   primeiro_atendimento_em: string | null;
@@ -57,6 +60,14 @@ function formatar(valor: any): string {
   if (Array.isArray(valor)) return valor.join(', ');
   if (valor === true) return 'Sim';
   if (valor === false) return 'Não';
+  if (typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    const [a, m, d] = valor.split('-');
+    return `${d}/${m}/${a}`;
+  }
+  if (typeof valor === 'string' && /^\d{4}-\d{2}$/.test(valor)) {
+    const [a, m] = valor.split('-');
+    return `${m}/${a}`;
+  }
   return String(valor);
 }
 
@@ -72,6 +83,7 @@ export default async function PaginaDetalhe({
     select
       s.id, s.protocolo, s.status, s.completude,
       s.cliente_nome, s.cliente_email, s.cliente_whatsapp,
+      s.id_reserva, s.valor_total_venda, s.responsavel_id,
       s.respostas, s.criado_em, s.primeiro_atendimento_em,
       ag.sla_horas,
       a.nome  as agente_nome,
@@ -95,6 +107,11 @@ export default async function PaginaDetalhe({
     select tipo, destinatario, status
     from envios_email where solicitacao_id = ${id}
     order by criado_em
+  `;
+
+  // Consultoras do time interno, para atribuir o responsável (alimenta o BI).
+  const consultoras = await sql<{ id: string; nome: string }[]>`
+    select id, nome from usuarios where ativo order by nome
   `;
 
   // O briefing segue a ordem do formulário, não a ordem do JSON.
@@ -158,7 +175,7 @@ export default async function PaginaDetalhe({
             <span className="dado-valor">
               {s.agencia_nome ?? 'Não identificada'}
               {s.agencia_tier === 'select' && (
-                <span className="selo-select">Select</span>
+                <span className="selo-select">Agência Select</span>
               )}
             </span>
           </div>
@@ -201,7 +218,14 @@ export default async function PaginaDetalhe({
         </section>
       ))}
 
-      <Acoes id={s.id} statusAtual={s.status} />
+      <Acoes
+        id={s.id}
+        statusAtual={s.status}
+        idReserva={s.id_reserva}
+        valorVenda={s.valor_total_venda}
+        responsavelId={s.responsavel_id}
+        consultoras={consultoras}
+      />
 
       <section className="caixa">
         <h2 className="caixa-titulo">E-mails</h2>

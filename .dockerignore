@@ -1,5 +1,32 @@
+# Dependências e build — reinstalados/reconstruídos dentro da imagem
 node_modules
 .next
+out
+build
+dist
+
+# Git
 .git
+.gitignore
+
+# Segredos: NUNCA devem entrar na imagem
+.env
+.env.*
+!.env.example
+infra/.env
+
+# Backups e registros
 infra/backups
+backups
 *.log
+*.sql.gz
+*.dump
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Artefatos de checagem de tipo
+tsconfig.tsbuildinfo

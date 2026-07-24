@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   PASSOS,
+  PERGUNTAS,
   perguntasDoPasso,
   perguntaVisivel,
   somarPessoas,
@@ -21,6 +22,43 @@ const ANO_ATUAL = HOJE.getFullYear();
 const MES_ATUAL = HOJE.getMonth() + 1;
 
 const ANOS = [ANO_ATUAL, ANO_ATUAL + 1, ANO_ATUAL + 2, ANO_ATUAL + 3];
+
+/** Data de hoje em ISO (YYYY-MM-DD), usada como mínimo do seletor de dia. */
+const ISO_HOJE = `${ANO_ATUAL}-${String(MES_ATUAL).padStart(2, '0')}-${String(
+  HOJE.getDate(),
+).padStart(2, '0')}`;
+
+// --- busca de cidades (autocomplete) ---------------------------------------
+// A lista completa de municípios brasileiros vive em /cidades.json e é
+// carregada sob demanda, na primeira vez que o campo de cidade aparece.
+let cacheCidades: string[] | null = null;
+let promessaCidades: Promise<string[]> | null = null;
+
+function carregarCidades(): Promise<string[]> {
+  if (cacheCidades) return Promise.resolve(cacheCidades);
+  if (!promessaCidades) {
+    promessaCidades = fetch('/cidades.json')
+      .then((r) => r.json())
+      .then((lista: string[]) => {
+        cacheCidades = lista;
+        return lista;
+      })
+      .catch(() => {
+        promessaCidades = null;
+        return [];
+      });
+  }
+  return promessaCidades;
+}
+
+/** Remove acentos e caixa para comparar sem tropeçar em digitação. */
+function normalizar(s: string) {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
 
 /** No ano corrente, só meses a partir do próximo. Ninguém viaja para trás. */
 function mesesDisponiveis(ano: number) {
@@ -73,6 +111,10 @@ function validar(p: Pergunta, valor: any): string | null {
       return 'Escolha um período a partir do mês que vem.';
     }
   }
+  if (p.tipo === 'data') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return 'Selecione uma data válida.';
+    if (String(valor) < ISO_HOJE) return 'Escolha uma data a partir de hoje.';
+  }
   return null;
 }
 
@@ -95,7 +137,19 @@ export default function Formulario({
   const ultimo = PASSOS.length;
 
   const definir = (id: string, valor: any) => {
-    setRespostas((r) => ({ ...r, [id]: valor }));
+    setRespostas((r) => {
+      const novo = { ...r, [id]: valor };
+      // Se esta mudança escondeu alguma pergunta condicional (por exemplo,
+      // trocar "já tenho a data" por "só uma previsão"), a resposta antiga
+      // dela é descartada. Assim as respostas guardadas refletem sempre o
+      // que o cliente realmente vê na tela.
+      for (const p of PERGUNTAS) {
+        if (novo[p.id] !== undefined && !perguntaVisivel(p, novo)) {
+          delete novo[p.id];
+        }
+      }
+      return novo;
+    });
     setErros((e) => {
       if (!e[id]) return e;
       const novo = { ...e };
@@ -178,10 +232,13 @@ export default function Formulario({
     <>
       {passo === 1 && (
         <div className="convite">
-          <div className="convite-rotulo">Você foi convidado por</div>
+          <div className="convite-rotulo">Sua viagem para Orlando com:</div>
           <div className="convite-nome">
-            {agenteNome} · {agenciaNome}
+            {agenteNome} – {agenciaNome}
           </div>
+          <p className="convite-chamada">
+            Preencha o formulário para receber um atendimento personalizado.
+          </p>
         </div>
       )}
 
@@ -322,6 +379,21 @@ function Campo({
         />
       )}
 
+      {p.tipo === 'cidade' && (
+        <CampoCidade id={p.id} valor={valor} erro={erro} aoMudar={aoMudar} />
+      )}
+
+      {p.tipo === 'data' && (
+        <input
+          id={p.id}
+          className={`entrada ${erro ? 'invalida' : ''}`}
+          type="date"
+          min={ISO_HOJE}
+          value={valor ?? ''}
+          onChange={(e) => aoMudar(e.target.value)}
+        />
+      )}
+
       {p.tipo === 'mes_ano' && (
         <div className="par">
           <select
@@ -402,6 +474,122 @@ function Campo({
       )}
 
       {erro && <span className="erro">{erro}</span>}
+    </div>
+  );
+}
+
+// ============================================================ campo de cidade
+
+function CampoCidade({
+  id,
+  valor,
+  erro,
+  aoMudar,
+}: {
+  id: string;
+  valor: any;
+  erro?: string;
+  aoMudar: (v: any) => void;
+}) {
+  const [cidades, setCidades] = useState<string[]>([]);
+  const [aberto, setAberto] = useState(false);
+  const [destaque, setDestaque] = useState(0);
+
+  useEffect(() => {
+    let vivo = true;
+    carregarCidades().then((lista) => {
+      if (vivo) setCidades(lista);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  // Pré-normaliza a lista uma vez, para filtrar rápido a cada tecla.
+  const pares = useMemo(
+    () => cidades.map((c) => ({ c, n: normalizar(c) })),
+    [cidades],
+  );
+
+  const texto = valor ?? '';
+  const alvo = normalizar(String(texto));
+
+  const sugestoes = useMemo(() => {
+    if (alvo.length < 2) return [];
+    const comeca: string[] = [];
+    const contem: string[] = [];
+    for (const p of pares) {
+      if (p.n.startsWith(alvo)) comeca.push(p.c);
+      else if (p.n.includes(alvo)) contem.push(p.c);
+      if (comeca.length >= 8) break;
+    }
+    return [...comeca, ...contem].slice(0, 8);
+  }, [pares, alvo]);
+
+  // A cidade escolhida já corresponde exatamente a um item: não sugere mais.
+  const jaSelecionada =
+    sugestoes.length === 1 && normalizar(sugestoes[0]) === alvo;
+  const mostrar = aberto && sugestoes.length > 0 && !jaSelecionada;
+
+  function escolher(cidade: string) {
+    aoMudar(cidade);
+    setAberto(false);
+  }
+
+  return (
+    <div className="cidade-busca">
+      <input
+        id={id}
+        className={`entrada ${erro ? 'invalida' : ''}`}
+        type="text"
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={mostrar}
+        aria-autocomplete="list"
+        placeholder="Comece a digitar sua cidade"
+        value={texto}
+        onChange={(e) => {
+          aoMudar(e.target.value);
+          setAberto(true);
+          setDestaque(0);
+        }}
+        onFocus={() => setAberto(true)}
+        onBlur={() => window.setTimeout(() => setAberto(false), 150)}
+        onKeyDown={(e) => {
+          if (!mostrar) return;
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setDestaque((d) => Math.min(d + 1, sugestoes.length - 1));
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setDestaque((d) => Math.max(d - 1, 0));
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            escolher(sugestoes[destaque]);
+          } else if (e.key === 'Escape') {
+            setAberto(false);
+          }
+        }}
+      />
+      {mostrar && (
+        <ul className="cidade-lista" role="listbox">
+          {sugestoes.map((c, i) => (
+            <li
+              key={c}
+              role="option"
+              aria-selected={i === destaque}
+              className={`cidade-item ${i === destaque ? 'destaque' : ''}`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                escolher(c);
+              }}
+              onMouseEnter={() => setDestaque(i)}
+            >
+              {c}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

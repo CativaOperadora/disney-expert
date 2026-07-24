@@ -70,14 +70,30 @@ export async function POST(req: NextRequest) {
     if (respostas[p.id] !== undefined) limpas[p.id] = respostas[p.id];
   }
 
+  // Descarta respostas de perguntas condicionais que não estão visíveis
+  // para o conjunto informado (por exemplo, a data exata quando o cliente
+  // escolheu informar só o período). Mantém o arquivo coerente com o que
+  // foi exibido e evita que uma data antiga sobreponha a escolha atual.
+  for (const p of PERGUNTAS) {
+    if (limpas[p.id] !== undefined && !perguntaVisivel(p, limpas)) {
+      delete limpas[p.id];
+    }
+  }
+
   // --- 3. projeção para as colunas consultáveis ----------------------
   const col = projetarColunas(limpas);
   const completude = calcularCompletude(limpas);
 
-  // "2027-07" vira data e texto legível
+  // A data vai para a coluna `data_prevista` (tipo date) e para um texto
+  // legível. Duas origens possíveis: o dia exato, quando o cliente já tem
+  // data fechada, ou o mês previsto, quando ainda está decidindo.
   let dataPrevista: string | null = null;
   let dataTexto: string | null = null;
-  if (typeof limpas.data_prevista === 'string' && /^\d{4}-\d{2}$/.test(limpas.data_prevista)) {
+  if (typeof limpas.data_exata === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(limpas.data_exata)) {
+    dataPrevista = limpas.data_exata;
+    const [ano, mes, dia] = limpas.data_exata.split('-');
+    dataTexto = `${dia} de ${MESES[Number(mes) - 1]} de ${ano}`;
+  } else if (typeof limpas.data_prevista === 'string' && /^\d{4}-\d{2}$/.test(limpas.data_prevista)) {
     dataPrevista = `${limpas.data_prevista}-01`;
     const [ano, mes] = limpas.data_prevista.split('-');
     dataTexto = `${MESES[Number(mes) - 1]} de ${ano}`;

@@ -8,6 +8,18 @@ export const runtime = 'nodejs';
 const STATUS_VALIDOS = STATUS.map((s) => s.id) as readonly string[];
 const MOTIVOS_VALIDOS = MOTIVOS_PERDA.map((m) => m[0]) as readonly string[];
 
+/** Converte "R$ 12.500,00", "12500", "12.500,00" ou número em reais. */
+function paraReais(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) && v >= 0 ? v : null;
+  if (typeof v !== 'string') return null;
+  let s = v.replace(/[^\d,.-]/g, '').trim();
+  if (!s) return null;
+  // Formato brasileiro: ponto de milhar e vírgula decimal.
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -38,22 +50,43 @@ export async function POST(
             ? 'sem_retorno_agencia'
             : null;
 
-      const [antes] = await sql<{ status: string }[]>`
-        select status from solicitacoes where id = ${id}
+      const [antes] = await sql<{ status: string; valor_total_venda: string | null }[]>`
+        select status, valor_total_venda from solicitacoes where id = ${id}
       `;
       if (!antes) {
         return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
       }
 
-      // Sair de "nova_solicitacao" pela primeira vez para o relógio do SLA.
+      // O valor da venda é obrigatório para fechar. Aceita o valor enviado
+      // junto com a ação ou um já gravado antes.
+      let valorVenda: number | null =
+        antes.valor_total_venda !== null ? Number(antes.valor_total_venda) : null;
+      if (corpo.status === 'venda_finalizada') {
+        const informado = paraReais(corpo.valor);
+        if (informado !== null) valorVenda = informado;
+        if (valorVenda === null || valorVenda <= 0) {
+          return NextResponse.json(
+            { erro: 'Informe o valor total da venda para marcar como finalizada.' },
+            { status: 422 },
+          );
+        }
+      }
+
+      // Sair de "nova_solicitacao" liga o relógio do SLA; entrar em
+      // "venda_finalizada" carimba a data da venda (base do faturamento).
       await sql`
         update solicitacoes
         set status = ${corpo.status}::status_solicitacao,
             motivo_perda = ${motivo}::motivo_perda,
+            valor_total_venda = ${valorVenda},
             primeiro_atendimento_em = case
               when ${corpo.status} <> 'nova_solicitacao'
                and primeiro_atendimento_em is null then now()
               else primeiro_atendimento_em
+            end,
+            venda_em = case
+              when ${corpo.status} = 'venda_finalizada' and venda_em is null then now()
+              else venda_em
             end
         where id = ${id}
       `;
@@ -77,6 +110,43 @@ export async function POST(
       await sql`
         insert into eventos (solicitacao_id, tipo, descricao)
         values (${id}, 'comentario', ${texto})
+      `;
+      return NextResponse.json({ ok: true });
+    }
+
+    if (corpo.acao === 'id_reserva') {
+      // Campo interno da especialista. Texto simples, editável a qualquer
+      // momento; vazio limpa o valor.
+      const valor = String(corpo.valor ?? '').trim().slice(0, 120);
+      await sql`
+        update solicitacoes set id_reserva = ${valor || null} where id = ${id}
+      `;
+      return NextResponse.json({ ok: true });
+    }
+
+    if (corpo.acao === 'valor_venda') {
+      // Valor da venda editável a qualquer momento (base dos indicadores
+      // financeiros). Vazio limpa o valor.
+      const bruto = String(corpo.valor ?? '').trim();
+      const valor = bruto === '' ? null : paraReais(bruto);
+      if (bruto !== '' && valor === null) {
+        return NextResponse.json({ erro: 'Valor inválido.' }, { status: 400 });
+      }
+      await sql`
+        update solicitacoes set valor_total_venda = ${valor} where id = ${id}
+      `;
+      return NextResponse.json({ ok: true });
+    }
+
+    if (corpo.acao === 'responsavel') {
+      // Consultora responsável pelo atendimento. Alimenta os rankings por
+      // consultora no BI. Vazio desatribui.
+      const valor = String(corpo.valor ?? '').trim();
+      if (valor !== '' && !/^[0-9a-f-]{36}$/i.test(valor)) {
+        return NextResponse.json({ erro: 'Responsável inválido.' }, { status: 400 });
+      }
+      await sql`
+        update solicitacoes set responsavel_id = ${valor || null} where id = ${id}
       `;
       return NextResponse.json({ ok: true });
     }

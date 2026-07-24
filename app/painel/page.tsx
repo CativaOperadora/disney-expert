@@ -43,12 +43,16 @@ export default async function Painel() {
           {abertas} {abertas === 1 ? 'solicitação aberta' : 'solicitações abertas'}
         </div>
 
+        <Link href="/painel/dashboards" className="barra-link" prefetch={false}>
+          Dashboards
+        </Link>
+
         <Link href="/api/sair" className="sair" prefetch={false}>
           Sair
         </Link>
       </header>
 
-      <Quadro cartoes={cartoes} />
+      <Quadro cartoes={cartoes} agora={Date.now()} />
     </div>
   );
 }

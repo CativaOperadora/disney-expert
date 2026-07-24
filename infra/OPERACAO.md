@@ -67,8 +67,11 @@ git clone <URL_DO_REPOSITORIO> .
 cd infra
 cp .env.example .env
 nano .env            # preencher todas as variáveis
-cp /caminho/do/schema_disney_expert.sql sql/
 ```
+
+O schema e as migrações já vêm no repositório (`infra/sql/`) e são
+carregados automaticamente na primeira subida do banco, em ordem. Não é
+preciso copiar nada à mão. Guia resumido de deploy em `DEPLOY.md`.
 
 **4. Apontar o domínio**
 

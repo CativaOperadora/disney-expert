@@ -22,7 +22,13 @@ export interface Cartao {
   email_falhou: boolean;
 }
 
-export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
+export default function Quadro({
+  cartoes: iniciais,
+  agora,
+}: {
+  cartoes: Cartao[];
+  agora: number;
+}) {
   const router = useRouter();
   const [, iniciarTransicao] = useTransition();
   const [cartoes, setCartoes] = useState(iniciais);
@@ -72,7 +78,9 @@ export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
             .filter((c) => c.status === col.id)
             .map((c) => ({
               ...c,
-              sla: calcularSla(c.criado_em, c.sla_horas, c.primeiro_atendimento_em),
+              // 'agora' vem do servidor para que SSR e hidratação calculem
+              // a mesma largura de barra e não haja divergência de hidratação.
+              sla: calcularSla(c.criado_em, c.sla_horas, c.primeiro_atendimento_em, agora),
             }))
             // Na entrada, quem vence antes aparece primeiro. Nas demais,
             // o mais recente no topo.
@@ -138,7 +146,7 @@ export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
                       <div className="ficha-topo">
                         <span className="ficha-protocolo">{c.protocolo}</span>
                         {c.agencia_tier === 'select' && (
-                          <span className="selo">Select</span>
+                          <span className="selo">Agência Select</span>
                         )}
                       </div>
 
@@ -166,16 +174,9 @@ export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
                         <span className="sla-texto">{c.sla.rotulo}</span>
                       </div>
 
-                      {(c.completude < 100 || c.email_falhou) && (
+                      {c.email_falhou && (
                         <footer className="ficha-rodape">
-                          {c.email_falhou && (
-                            <span className="aviso-selo grave">E-mail não entregue</span>
-                          )}
-                          {c.completude < 100 && (
-                            <span className="aviso-selo">
-                              {c.completude}% do briefing
-                            </span>
-                          )}
+                          <span className="aviso-selo grave">E-mail não entregue</span>
                         </footer>
                       )}
                     </Link>
@@ -190,12 +191,6 @@ export default function Quadro({ cartoes: iniciais }: { cartoes: Cartao[] }) {
           );
         })}
       </div>
-
-      <p className="dica">
-        Arraste os cartões entre as colunas para mudar a situação. O prazo de
-        atendimento é de 24 horas para agências Select e 48 horas para as
-        demais, contadas a partir da chegada da solicitação.
-      </p>
     </>
   );
 }
