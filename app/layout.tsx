@@ -1,12 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 
-const fraunces = Fraunces({
+/**
+ * Poppins é a fonte da marca Cativa.
+ * 400 para corpo, 500 para rótulos, 600 para títulos e assinatura.
+ */
+const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['500'],
+  weight: ['400', '500', '600'],
   display: 'swap',
-  variable: '--fonte-display',
+  variable: '--fonte',
 });
 
 export const metadata: Metadata = {
@@ -19,7 +23,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#1b2a4a',
+  themeColor: '#004b8a',
 };
 
 export default function RootLayout({
@@ -28,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={fraunces.variable}>
+    <html lang="pt-BR" className={poppins.variable}>
       <body>{children}</body>
     </html>
   );

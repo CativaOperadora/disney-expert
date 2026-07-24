@@ -1,52 +1,79 @@
 /* =====================================================================
-   DISNEY EXPERT · Estilos
-   Azul do céu de Orlando ao anoitecer, com dourado de luz de fim de tarde.
-   Uma coluna, alvos de toque grandes, sem nada que atrapalhe no celular.
+   CATIVA · Sistema visual
+   Azul #004b8a, amarelo #ffcd28, Poppins.
+
+   REGRA DO AMARELO: nunca como texto sobre fundo claro. O contraste é
+   insuficiente e fica ilegível. Ele entra sempre como preenchimento,
+   com texto azul ou escuro por cima.
    ===================================================================== */
 
 :root {
-  --noite: #1b2a4a;
-  --noite-media: #3d4d6e;
-  --noite-clara: #6b7793;
-  --dourado: #e4a11b;
-  --dourado-fundo: #fdf4e2;
-  --papel: #fbfaf7;
-  --branco: #ffffff;
-  --linha: #e2e0d9;
-  --linha-forte: #c9c6bc;
+  /* --- marca ------------------------------------------------------- */
+  --marca: #004b8a;
+  --marca-escura: #003a6b;
+  --marca-media: #1a6aa8;
+  --marca-fundo: #e8f0f7;
+  --marca-linha: #c5daea;
+
+  --destaque: #ffcd28;
+  --destaque-escuro: #b88f00;
+  --destaque-fundo: #fff8e0;
+  --destaque-linha: #f5e2a8;
+
+  /* --- superfícies -------------------------------------------------- */
+  --fundo: #f6f6f4;
+  --superficie: #ffffff;
+
+  /* --- texto -------------------------------------------------------- */
+  --texto: #16202b;
+  --texto-medio: #4a5764;
+  --texto-fraco: #7c8894;
+
+  /* --- linhas ------------------------------------------------------- */
+  --borda: #e4e5e3;
+  --borda-forte: #cbcdcb;
+
+  /* --- espera: escala própria, para não competir com o amarelo ------ */
+  --espera-1: #c9cfd6;
+  --espera-2: #e0812f;
+  --espera-3: #bd4432;
+
   --erro: #a8332b;
-  --erro-fundo: #fdf1f0;
+  --erro-fundo: #fbf0ee;
+  --erro-linha: #eccbc4;
+
+  --sucesso: #1c6146;
+  --sucesso-fundo: #e6f1ec;
 
   --raio: 12px;
   --coluna: 560px;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background: var(--papel);
-  color: var(--noite);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 17px;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte), system-ui, sans-serif;
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-.display {
-  font-family: var(--fonte-display), Georgia, serif;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+.display { font-weight: 600; letter-spacing: -0.02em; }
+
+::selection { background: var(--destaque); color: var(--marca-escura); }
+
+:focus-visible {
+  outline: 2px solid var(--marca);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* --- estrutura ------------------------------------------------------ */
+/* =====================================================================
+   FORMULÁRIO · voltado ao cliente final
+   ===================================================================== */
 
 .pagina {
   max-width: var(--coluna);
@@ -57,34 +84,27 @@ body {
 /* --- convite do agente ---------------------------------------------- */
 
 .convite {
-  background: var(--dourado-fundo);
-  border: 1px solid #f0dfb8;
+  background: var(--marca);
   border-radius: var(--raio);
   padding: 16px 18px;
   margin-bottom: 28px;
+  border-left: 4px solid var(--destaque);
 }
 
 .convite-rotulo {
-  font-size: 13px;
-  color: #8a6410;
-  letter-spacing: 0.03em;
+  font-size: 12px;
+  color: var(--destaque);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 500;
   margin-bottom: 2px;
 }
 
-.convite-nome {
-  font-size: 17px;
-  color: #5c430b;
-  font-weight: 500;
-}
+.convite-nome { font-size: 17px; color: #fff; font-weight: 500; }
 
 /* --- roteiro de cinco paradas --------------------------------------- */
 
-.roteiro {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 36px;
-}
+.roteiro { display: flex; align-items: flex-start; margin-bottom: 36px; }
 
 .parada {
   flex: 1;
@@ -100,7 +120,7 @@ body {
   position: absolute;
   top: 7px;
   height: 2px;
-  background: var(--linha);
+  background: var(--borda-forte);
   width: 50%;
 }
 
@@ -111,93 +131,72 @@ body {
 
 .parada.feita::before,
 .parada.feita::after,
-.parada.atual::before {
-  background: var(--dourado);
-}
+.parada.atual::before { background: var(--marca); }
 
 .ponto {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--branco);
-  border: 2px solid var(--linha-forte);
+  background: var(--superficie);
+  border: 2px solid var(--borda-forte);
   position: relative;
   z-index: 1;
 }
 
-.parada.feita .ponto {
-  background: var(--dourado);
-  border-color: var(--dourado);
-}
+.parada.feita .ponto { background: var(--marca); border-color: var(--marca); }
 
 .parada.atual .ponto {
-  background: var(--branco);
-  border-color: var(--dourado);
-  box-shadow: 0 0 0 4px var(--dourado-fundo);
+  background: var(--destaque);
+  border-color: var(--marca);
+  box-shadow: 0 0 0 4px var(--destaque-fundo);
 }
 
 .parada-nome {
   font-size: 12px;
-  color: var(--noite-clara);
+  color: var(--texto-fraco);
   margin-top: 10px;
   text-align: center;
   line-height: 1.3;
 }
 
-.parada.atual .parada-nome {
-  color: var(--noite);
-  font-weight: 500;
-}
+.parada.atual .parada-nome { color: var(--marca); font-weight: 500; }
 
-/* --- cabeçalho do passo --------------------------------------------- */
+/* --- passo ----------------------------------------------------------- */
 
-.passo-titulo {
-  font-size: 27px;
-  line-height: 1.25;
-  margin-bottom: 6px;
-}
+.passo-titulo { font-size: 27px; line-height: 1.25; margin-bottom: 6px; color: var(--marca); }
+.passo-descricao { color: var(--texto-medio); margin-bottom: 32px; }
 
-.passo-descricao {
-  color: var(--noite-clara);
-  margin-bottom: 32px;
-}
-
-/* --- campos --------------------------------------------------------- */
+/* --- campos ---------------------------------------------------------- */
 
 .campo { margin-bottom: 30px; }
 
-.rotulo {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 4px;
-}
+.rotulo { display: block; font-weight: 500; margin-bottom: 4px; }
 
 .ajuda {
   display: block;
   font-size: 14px;
-  color: var(--noite-clara);
+  color: var(--texto-fraco);
   margin-bottom: 12px;
 }
 
-.rotulo + .entrada,
-.rotulo + .opcoes { margin-top: 10px; }
+.rotulo + .entrada, .rotulo + .opcoes { margin-top: 10px; }
 
 .entrada {
   width: 100%;
   padding: 13px 14px;
-  font-size: 17px;
+  font-size: 16px;
   font-family: inherit;
-  color: var(--noite);
-  background: var(--branco);
-  border: 1px solid var(--linha-forte);
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
   border-radius: var(--raio);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .entrada:focus {
   outline: none;
-  border-color: var(--noite-media);
-  box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.09);
+  border-color: var(--marca);
+  box-shadow: 0 0 0 3px var(--marca-fundo);
 }
 
 .entrada.invalida { border-color: var(--erro); }
@@ -205,7 +204,7 @@ body {
 .par { display: flex; gap: 10px; }
 .par > * { flex: 1; }
 
-/* --- opções como cartões, não como bolinhas ------------------------- */
+/* --- opções como cartões --------------------------------------------- */
 
 .opcoes { display: flex; flex-direction: column; gap: 8px; }
 
@@ -214,103 +213,101 @@ body {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: var(--branco);
-  border: 1px solid var(--linha-forte);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
   border-radius: var(--raio);
   cursor: pointer;
   text-align: left;
   font-size: 16px;
   font-family: inherit;
-  color: var(--noite);
+  color: var(--texto);
   width: 100%;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.opcao:hover { border-color: var(--noite-clara); }
+.opcao:hover { border-color: var(--marca-media); }
 
 .opcao.marcada {
-  border-color: var(--dourado);
-  background: var(--dourado-fundo);
+  border-color: var(--marca);
+  background: var(--marca-fundo);
+  font-weight: 500;
 }
 
 .marca {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  border: 2px solid var(--linha-forte);
-  background: var(--branco);
+  border: 2px solid var(--borda-forte);
+  background: var(--superficie);
 }
 
 .marca.redonda { border-radius: 50%; }
 .marca.quadrada { border-radius: 5px; }
 
-.opcao.marcada .marca {
-  border-color: var(--dourado);
-  background: var(--dourado);
+.opcao.marcada .marca,
+.aceite.marcada .marca {
+  border-color: var(--marca);
+  background: var(--marca);
   position: relative;
 }
 
-.opcao.marcada .marca::after {
+.opcao.marcada .marca::after,
+.aceite.marcada .marca::after {
   content: '';
   position: absolute;
   left: 5px;
   top: 1px;
   width: 5px;
   height: 10px;
-  border: solid var(--branco);
+  border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
-
-/* --- resumo do grupo ------------------------------------------------ */
+/* --- resumo do grupo -------------------------------------------------- */
 
 .resumo {
   margin: -18px 0 30px;
   padding: 12px 16px;
-  background: var(--dourado-fundo);
-  border: 1px solid #f0dfb8;
+  background: var(--destaque-fundo);
+  border: 1px solid var(--destaque-linha);
+  border-left: 3px solid var(--destaque);
   border-radius: var(--raio);
   font-size: 15px;
-  color: #5c430b;
+  color: var(--texto);
 }
 
-.resumo strong { font-weight: 500; }
+.resumo strong { font-weight: 600; color: var(--marca); }
 
-/* --- aceite --------------------------------------------------------- */
+/* --- aceite ----------------------------------------------------------- */
 
 .aceite {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: var(--branco);
-  border: 1px solid var(--linha);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
   border-radius: var(--raio);
   cursor: pointer;
   font-size: 15px;
   line-height: 1.5;
   text-align: left;
   font-family: inherit;
-  color: var(--noite);
+  color: var(--texto);
   width: 100%;
 }
 
 .aceite .marca { margin-top: 1px; }
-.aceite.marcada { border-color: var(--dourado); }
+.aceite.marcada { border-color: var(--marca); }
 
-/* --- mensagens de erro ---------------------------------------------- */
+/* --- erros ------------------------------------------------------------ */
 
-.erro {
-  display: block;
-  font-size: 14px;
-  color: var(--erro);
-  margin-top: 8px;
-}
+.erro { display: block; font-size: 14px; color: var(--erro); margin-top: 8px; }
 
 .erro-caixa {
   background: var(--erro-fundo);
-  border: 1px solid #eccbc8;
+  border: 1px solid var(--erro-linha);
   border-radius: var(--raio);
   padding: 14px 16px;
   font-size: 15px;
@@ -318,51 +315,43 @@ body {
   margin-bottom: 20px;
 }
 
-/* --- navegação ------------------------------------------------------ */
+/* --- navegação -------------------------------------------------------- */
 
-.navegacao {
-  display: flex;
-  gap: 12px;
-  margin-top: 40px;
-}
+.navegacao { display: flex; gap: 12px; margin-top: 40px; }
 
 .botao {
   padding: 15px 26px;
-  font-size: 17px;
+  font-size: 16px;
   font-family: inherit;
   font-weight: 500;
   border-radius: var(--raio);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s, opacity 0.15s;
 }
 
-.botao:disabled { opacity: 0.55; cursor: default; }
+.botao:disabled { opacity: 0.5; cursor: default; }
 
-.botao-principal {
-  flex: 1;
-  background: var(--noite);
-  color: var(--branco);
-}
-
-.botao-principal:hover:not(:disabled) { background: var(--noite-media); }
+.botao-principal { flex: 1; background: var(--marca); color: #fff; }
+.botao-principal:hover:not(:disabled) { background: var(--marca-escura); }
 
 .botao-voltar {
   background: transparent;
-  color: var(--noite-clara);
-  border-color: var(--linha-forte);
+  color: var(--texto-medio);
+  border-color: var(--borda-forte);
 }
 
-/* --- conclusão ------------------------------------------------------ */
+.botao-voltar:hover:not(:disabled) { border-color: var(--marca); color: var(--marca); }
+
+/* --- conclusão --------------------------------------------------------- */
 
 .fim { text-align: center; padding: 40px 0; }
 
 .fim-selo {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: var(--dourado-fundo);
-  border: 2px solid var(--dourado);
+  background: var(--destaque);
   margin: 0 auto 26px;
   position: relative;
 }
@@ -370,123 +359,83 @@ body {
 .fim-selo::after {
   content: '';
   position: absolute;
-  left: 19px;
-  top: 13px;
-  width: 12px;
-  height: 22px;
-  border: solid var(--dourado);
+  left: 21px;
+  top: 15px;
+  width: 13px;
+  height: 23px;
+  border: solid var(--marca);
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
 
-.fim-titulo { font-size: 29px; margin-bottom: 14px; }
-.fim-texto { color: var(--noite-media); margin-bottom: 30px; }
+.fim-titulo { font-size: 29px; margin-bottom: 14px; color: var(--marca); }
+.fim-texto { color: var(--texto-medio); margin-bottom: 30px; }
 
 .protocolo {
   display: inline-block;
   padding: 10px 18px;
-  background: var(--branco);
-  border: 1px solid var(--linha-forte);
+  background: var(--marca-fundo);
+  border: 1px solid var(--marca-linha);
   border-radius: var(--raio);
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, Menlo, monospace;
   font-size: 15px;
   letter-spacing: 0.05em;
+  color: var(--marca);
 }
 
-/* --- página de link inválido ---------------------------------------- */
-
 .aviso { text-align: center; padding: 60px 0; }
-.aviso-titulo { font-size: 25px; margin-bottom: 14px; }
-.aviso-texto { color: var(--noite-media); }
-
-/* --- rodapé --------------------------------------------------------- */
+.aviso-titulo { font-size: 25px; margin-bottom: 14px; color: var(--marca); }
+.aviso-texto { color: var(--texto-medio); }
 
 .rodape {
   margin-top: 48px;
   padding-top: 22px;
-  border-top: 1px solid var(--linha);
+  border-top: 1px solid var(--borda);
   font-size: 13px;
-  color: var(--noite-clara);
+  color: var(--texto-fraco);
   text-align: center;
 }
 
-@media (max-width: 420px) {
-  .pagina { padding: 24px 16px 60px; }
-  .passo-titulo { font-size: 24px; }
-  .parada-nome { font-size: 11px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
-}
-
 /* =====================================================================
-   PAINEL INTERNO · Cativa
-   Ferramenta de trabalho de oito horas por dia. Densidade alta, cor
-   contida, e o sinal visual reservado para o que exige decisão:
-   há quanto tempo alguém está esperando.
+   PAINEL INTERNO
    ===================================================================== */
-
-:root {
-  /* ------------------------------------------------------------------
-     MARCA. Trocar aqui quando a identidade oficial da Cativa chegar.
-     Todo o painel deriva destas três linhas.
-     ------------------------------------------------------------------ */
-  --marca: #12595c;
-  --marca-clara: #e7f0f0;
-  --marca-escura: #0a3c3e;
-
-  --fundo: #f6f5f2;
-  --superficie: #ffffff;
-  --superficie-2: #fbfaf7;
-
-  --tinta: #1c2426;
-  --tinta-media: #4e585a;
-  --tinta-fraca: #838c8e;
-
-  --borda: #e5e3dd;
-  --borda-forte: #cdcac2;
-
-  /* Espera: fresco, atenção, urgente */
-  --espera-1: #cfcdc5;
-  --espera-2: #d99a3c;
-  --espera-3: #b8543a;
-}
 
 .tela {
   min-height: 100vh;
   background: var(--fundo);
-  color: var(--tinta);
   display: flex;
   flex-direction: column;
 }
 
-/* --- barra superior -------------------------------------------------- */
+/* --- barra superior ---------------------------------------------------- */
 
 .barra {
   display: flex;
   align-items: center;
   gap: 32px;
   padding: 0 24px;
-  height: 60px;
-  background: var(--superficie);
-  border-bottom: 1px solid var(--borda);
+  height: 62px;
+  background: var(--marca);
   flex-shrink: 0;
 }
 
-.barra-marca { display: flex; align-items: center; gap: 12px; }
+.barra-marca { display: flex; align-items: center; gap: 13px; }
 
+/* Trocar por <img src="/logo.svg" alt="Cativa" height={26} /> quando
+   o arquivo do logo estiver em /public. */
 .marca-nome {
-  font-family: var(--fonte-display), Georgia, serif;
   font-size: 21px;
-  font-weight: 500;
-  color: var(--marca);
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+  position: relative;
+  padding-bottom: 3px;
+  border-bottom: 3px solid var(--destaque);
 }
 
-.marca-divisor { width: 1px; height: 20px; background: var(--borda-forte); }
+.marca-divisor { width: 1px; height: 22px; background: rgba(255, 255, 255, 0.28); }
 
-.marca-produto { font-size: 15px; color: var(--tinta-media); }
+.marca-produto { font-size: 15px; color: rgba(255, 255, 255, 0.82); }
 
 .barra-abas { display: flex; gap: 4px; margin-left: auto; }
 
@@ -497,31 +446,34 @@ body {
   padding: 7px 14px;
   border-radius: 8px;
   font-size: 15px;
-  color: var(--tinta-media);
+  color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
+  transition: background 0.15s, color 0.15s;
 }
 
-.aba:hover { background: var(--fundo); }
-.aba.ativa { background: var(--marca-clara); color: var(--marca-escura); }
+.aba:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+.aba.ativa { background: var(--destaque); color: var(--marca-escura); font-weight: 500; }
 
 .contador {
   font-size: 12px;
   padding: 1px 7px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.16);
 }
 
-.aba.ativa .contador { background: rgba(255, 255, 255, 0.65); }
+.aba.ativa .contador { background: rgba(0, 75, 138, 0.16); }
 
 .sair {
   font-size: 15px;
-  color: var(--tinta-fraca);
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   padding: 7px 12px;
 }
-.sair:hover { color: var(--tinta); }
 
-/* --- quadro ---------------------------------------------------------- */
+.sair:hover { color: #fff; }
+
+/* --- quadro ------------------------------------------------------------ */
 
 .quadro {
   flex: 1;
@@ -533,20 +485,17 @@ body {
 }
 
 .coluna {
-  flex: 0 0 268px;
-  background: rgba(0, 0, 0, 0.022);
+  flex: 0 0 270px;
+  background: rgba(0, 75, 138, 0.035);
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 14px 12px;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 150px);
   display: flex;
   flex-direction: column;
 }
 
-.coluna.alvo {
-  background: var(--marca-clara);
-  border-color: var(--marca);
-}
+.coluna.alvo { background: var(--marca-fundo); border-color: var(--marca); }
 
 .coluna-topo { flex-shrink: 0; margin-bottom: 12px; padding: 0 4px; }
 
@@ -557,26 +506,22 @@ body {
   gap: 8px;
 }
 
-.coluna-titulo {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
+.coluna-titulo { font-size: 14px; font-weight: 600; color: var(--marca); }
 
 .coluna-conta {
   font-size: 12px;
-  color: var(--tinta-fraca);
+  color: var(--texto-medio);
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: 20px;
   padding: 1px 8px;
 }
 
-.coluna-nota { font-size: 12px; color: var(--tinta-fraca); margin-top: 2px; }
+.coluna-nota { font-size: 12px; color: var(--texto-fraco); margin-top: 2px; }
 
 .coluna-espera { font-size: 12px; margin-top: 6px; font-weight: 500; }
-.coluna-espera.nivel-2 { color: #8c5c14; }
-.coluna-espera.nivel-3 { color: #8f3c26; }
+.coluna-espera.nivel-2 { color: #a35c17; }
+.coluna-espera.nivel-3 { color: #9c3325; }
 
 .coluna-corpo {
   overflow-y: auto;
@@ -592,10 +537,10 @@ body {
   padding: 22px 12px;
   text-align: center;
   font-size: 13px;
-  color: var(--tinta-fraca);
+  color: var(--texto-fraco);
 }
 
-/* --- ficha ----------------------------------------------------------- */
+/* --- ficha ------------------------------------------------------------- */
 
 .ficha {
   display: flex;
@@ -604,14 +549,17 @@ body {
   border-radius: 10px;
   overflow: hidden;
   cursor: grab;
-  transition: border-color 0.15s, transform 0.1s;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
-.ficha:hover { border-color: var(--borda-forte); }
+.ficha:hover {
+  border-color: var(--marca-linha);
+  box-shadow: 0 1px 3px rgba(0, 75, 138, 0.08);
+}
+
 .ficha:active { cursor: grabbing; }
 .ficha.movendo { opacity: 0.4; transform: rotate(1.5deg); }
 
-/* A barra de espera é o sinal principal do quadro. */
 .espera { width: 3px; flex-shrink: 0; background: var(--borda); }
 .espera.nivel-1 { background: var(--espera-1); }
 .espera.nivel-2 { background: var(--espera-2); }
@@ -634,20 +582,21 @@ body {
 }
 
 .ficha-protocolo {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, Menlo, monospace;
   font-size: 11px;
-  color: var(--tinta-fraca);
+  color: var(--texto-fraco);
   letter-spacing: 0.04em;
 }
 
 .selo {
   font-size: 10px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
-  background: var(--marca);
-  color: #fff;
+  background: var(--destaque);
+  color: var(--marca-escura);
 }
 
 .ficha-nome {
@@ -655,16 +604,17 @@ body {
   font-weight: 500;
   line-height: 1.3;
   margin-bottom: 4px;
+  color: var(--texto);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.ficha-dado { font-size: 13px; color: var(--tinta-media); line-height: 1.45; }
+.ficha-dado { font-size: 13px; color: var(--texto-medio); line-height: 1.45; }
 
 .ficha-agencia {
   font-size: 12px;
-  color: var(--tinta-fraca);
+  color: var(--texto-fraco);
   margin-top: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -677,47 +627,43 @@ body {
   gap: 5px;
   margin-top: 9px;
   padding-top: 8px;
-  border-top: 1px solid #f1efea;
+  border-top: 1px solid #f1f1ef;
 }
 
 .tempo-selo {
   font-size: 11px;
   padding: 2px 7px;
   border-radius: 5px;
-  background: #f1efea;
-  color: var(--tinta-fraca);
+  background: #f1f1ef;
+  color: var(--texto-fraco);
 }
 
-.tempo-selo.nivel-2 { background: #fbf0dd; color: #8c5c14; }
-.tempo-selo.nivel-3 { background: #f9e9e4; color: #8f3c26; }
+.tempo-selo.nivel-2 { background: #fbeee0; color: #a35c17; }
+.tempo-selo.nivel-3 { background: #f9e8e5; color: #9c3325; }
 
 .aviso-selo {
   font-size: 11px;
   padding: 2px 7px;
   border-radius: 5px;
-  background: #fbf0dd;
-  color: #8c5c14;
+  background: var(--destaque-fundo);
+  color: var(--destaque-escuro);
 }
 
-.aviso-selo.grave { background: #f9e9e4; color: #8f3c26; }
+.aviso-selo.grave { background: #f9e8e5; color: #9c3325; }
 
-.dica {
-  padding: 0 24px 22px;
-  font-size: 13px;
-  color: var(--tinta-fraca);
-}
+.dica { padding: 0 24px 22px; font-size: 13px; color: var(--texto-fraco); }
 
 .faixa-erro {
   margin: 0 24px;
   padding: 11px 15px;
-  background: #f9e9e4;
-  border: 1px solid #eccbc2;
+  background: var(--erro-fundo);
+  border: 1px solid var(--erro-linha);
   border-radius: 8px;
-  color: #8f3c26;
+  color: var(--erro);
   font-size: 14px;
 }
 
-/* --- detalhe --------------------------------------------------------- */
+/* --- detalhe ------------------------------------------------------------ */
 
 .painel {
   max-width: 780px;
@@ -727,23 +673,25 @@ body {
   min-height: 100vh;
 }
 
-.painel-titulo { font-size: 26px; line-height: 1.2; color: var(--tinta); }
-.painel-sub { color: var(--tinta-fraca); font-size: 15px; }
+.painel-titulo { font-size: 26px; line-height: 1.2; color: var(--marca); }
+.painel-sub { color: var(--texto-fraco); font-size: 15px; }
 
 .voltar-link {
   display: inline-block;
-  color: var(--tinta-fraca);
+  color: var(--marca);
   text-decoration: none;
   font-size: 15px;
   margin-bottom: 18px;
 }
-.voltar-link:hover { color: var(--tinta); }
+
+.voltar-link:hover { text-decoration: underline; }
 
 .detalhe-topo { margin-bottom: 22px; }
+
 .cartao-protocolo {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
-  color: var(--tinta-fraca);
+  color: var(--texto-fraco);
   letter-spacing: 0.05em;
 }
 
@@ -757,28 +705,31 @@ body {
 
 .caixa-titulo {
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--tinta-fraca);
+  color: var(--marca);
   margin-bottom: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--borda);
 }
 
 .dupla { display: flex; flex-wrap: wrap; gap: 26px; }
 .dupla > div { min-width: 190px; }
 
-.dado-rotulo { display: block; font-size: 12px; color: var(--tinta-fraca); }
+.dado-rotulo { display: block; font-size: 12px; color: var(--texto-fraco); }
 .dado-valor { display: block; font-size: 16px; }
 .dado-link { display: block; font-size: 15px; color: var(--marca); }
 
 .selo-select {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 20px;
-  background: var(--marca);
-  color: #fff;
+  background: var(--destaque);
+  color: var(--marca-escura);
   font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
 
@@ -787,7 +738,7 @@ body {
   padding-top: 12px;
   border-top: 1px solid var(--borda);
   font-size: 13px;
-  color: var(--tinta-fraca);
+  color: var(--texto-fraco);
 }
 
 .briefing { display: flex; flex-direction: column; }
@@ -796,11 +747,11 @@ body {
   display: flex;
   gap: 16px;
   padding: 9px 0;
-  border-bottom: 1px solid #f2f1ec;
+  border-bottom: 1px solid #f3f3f1;
 }
 
 .briefing-item:last-child { border-bottom: none; }
-.briefing-item dt { flex: 0 0 45%; font-size: 14px; color: var(--tinta-fraca); }
+.briefing-item dt { flex: 0 0 45%; font-size: 14px; color: var(--texto-fraco); }
 .briefing-item dd { flex: 1; font-size: 16px; }
 
 .lista-simples { list-style: none; }
@@ -811,7 +762,7 @@ body {
   gap: 12px;
   flex-wrap: wrap;
   padding: 9px 0;
-  border-bottom: 1px solid #f2f1ec;
+  border-bottom: 1px solid #f3f3f1;
   font-size: 15px;
 }
 
@@ -822,19 +773,19 @@ body {
   padding: 2px 9px;
   border-radius: 20px;
   font-size: 12px;
-  background: #f1efea;
-  color: var(--tinta-media);
+  background: #f1f1ef;
+  color: var(--texto-medio);
 }
 
-.e-pendente { background: #f1efea; color: #6c6961; }
-.e-enviado, .e-entregue, .e-aberto { background: #e4efe9; color: #1c5540; }
-.e-bounce, .e-falha, .e-spam { background: #f9e9e4; color: #8f3c26; }
+.e-pendente { background: #f1f1ef; color: var(--texto-medio); }
+.e-enviado, .e-entregue, .e-aberto { background: var(--sucesso-fundo); color: var(--sucesso); }
+.e-bounce, .e-falha, .e-spam { background: var(--erro-fundo); color: var(--erro); }
 
 .tempo { list-style: none; }
 
 .tempo li {
   padding: 11px 0 11px 16px;
-  border-left: 2px solid var(--borda);
+  border-left: 2px solid var(--marca-linha);
   position: relative;
 }
 
@@ -846,18 +797,35 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--borda-forte);
+  background: var(--marca);
 }
 
-.tempo-quando { font-size: 12px; color: var(--tinta-fraca); margin-right: 10px; }
+.tempo-quando { font-size: 12px; color: var(--texto-fraco); margin-right: 10px; }
 .tempo-tipo { font-size: 14px; font-weight: 500; }
-.tempo-texto { font-size: 15px; color: var(--tinta-media); margin-top: 3px; }
+.tempo-texto { font-size: 15px; color: var(--texto-medio); margin-top: 3px; }
+
+.vazio {
+  padding: 50px 20px;
+  text-align: center;
+  color: var(--texto-fraco);
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio);
+}
+
+/* --- telas estreitas ---------------------------------------------------- */
 
 @media (max-width: 560px) {
   .barra { gap: 14px; padding: 0 14px; }
-  .marca-produto, .coluna-nota { display: none; }
+  .marca-produto, .marca-divisor, .coluna-nota { display: none; }
   .quadro { padding: 16px 14px 10px; }
-  .coluna { flex-basis: 250px; }
+  .coluna { flex-basis: 252px; }
   .briefing-item { flex-direction: column; gap: 2px; }
   .briefing-item dt { flex: none; }
+  .pagina { padding: 24px 16px 60px; }
+  .passo-titulo { font-size: 24px; }
+  .parada-nome { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
 }
