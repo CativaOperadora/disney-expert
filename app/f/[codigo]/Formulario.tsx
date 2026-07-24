@@ -5,6 +5,7 @@ import {
   PASSOS,
   perguntasDoPasso,
   perguntaVisivel,
+  somarPessoas,
   type Pergunta,
 } from '@/lib/perguntas';
 
@@ -15,10 +16,19 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-const ANOS = (() => {
-  const atual = new Date().getFullYear();
-  return [atual, atual + 1, atual + 2, atual + 3];
-})();
+const HOJE = new Date();
+const ANO_ATUAL = HOJE.getFullYear();
+const MES_ATUAL = HOJE.getMonth() + 1;
+
+const ANOS = [ANO_ATUAL, ANO_ATUAL + 1, ANO_ATUAL + 2, ANO_ATUAL + 3];
+
+/** No ano corrente, só meses a partir do próximo. Ninguém viaja para trás. */
+function mesesDisponiveis(ano: number) {
+  const primeiro = ano === ANO_ATUAL ? MES_ATUAL + 1 : 1;
+  return MESES.map((nome, i) => ({ nome, numero: i + 1 })).filter(
+    (m) => m.numero >= primeiro,
+  );
+}
 
 function mascararTelefone(valor: string) {
   const d = valor.replace(/\D/g, '').slice(0, 11);
@@ -56,8 +66,12 @@ function validar(p: Pergunta, valor: any): string | null {
     if (p.min !== undefined && n < p.min) return `O mínimo é ${p.min}.`;
     if (p.max !== undefined && n > p.max) return `O máximo é ${p.max}.`;
   }
-  if (p.tipo === 'mes_ano' && !/^\d{4}-\d{2}$/.test(valor)) {
-    return 'Escolha o mês e o ano.';
+  if (p.tipo === 'mes_ano') {
+    if (!/^\d{4}-\d{2}$/.test(valor)) return 'Escolha o mês e o ano.';
+    const [a, m] = String(valor).split('-').map(Number);
+    if (a * 12 + m <= ANO_ATUAL * 12 + MES_ATUAL) {
+      return 'Escolha um período a partir do mês que vem.';
+    }
   }
   return null;
 }
@@ -191,13 +205,15 @@ export default function Formulario({
       {falha && <div className="erro-caixa">{falha}</div>}
 
       {visiveis.map((p) => (
-        <Campo
-          key={p.id}
-          pergunta={p}
-          valor={respostas[p.id]}
-          erro={erros[p.id]}
-          aoMudar={(v) => definir(p.id, v)}
-        />
+        <div key={p.id}>
+          <Campo
+            pergunta={p}
+            valor={respostas[p.id]}
+            erro={erros[p.id]}
+            aoMudar={(v) => definir(p.id, v)}
+          />
+          {p.id === 'quantas_criancas' && <ResumoGrupo respostas={respostas} />}
+        </div>
       ))}
 
       <div className="navegacao">
@@ -220,6 +236,25 @@ export default function Formulario({
         </button>
       </div>
     </>
+  );
+}
+
+function ResumoGrupo({ respostas }: { respostas: Respostas }) {
+  const total = somarPessoas(respostas);
+  if (total === null) return null;
+
+  const adultos = Number(respostas.quantos_adultos);
+  const criancas = Number(respostas.quantas_criancas ?? 0);
+  const texto = (n: number, um: string, muitos: string) =>
+    `${n} ${n === 1 ? um : muitos}`;
+
+  return (
+    <div className="resumo">
+      <strong>{texto(total, 'pessoa no total', 'pessoas no total')}</strong>
+      {': '}
+      {texto(adultos, 'adulto', 'adultos')}
+      {criancas > 0 && ` e ${texto(criancas, 'criança', 'crianças')}`}
+    </div>
   );
 }
 
@@ -298,9 +333,11 @@ function Campo({
             }
           >
             <option value="">Mês</option>
-            {MESES.map((m, i) => (
-              <option key={m} value={String(i + 1).padStart(2, '0')}>
-                {m}
+            {mesesDisponiveis(
+              valor ? Number(String(valor).slice(0, 4)) : ANOS[0],
+            ).map((m) => (
+              <option key={m.nome} value={String(m.numero).padStart(2, '0')}>
+                {m.nome}
               </option>
             ))}
           </select>

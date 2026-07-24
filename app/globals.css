@@ -262,6 +262,21 @@ body {
   transform: rotate(45deg);
 }
 
+
+/* --- resumo do grupo ------------------------------------------------ */
+
+.resumo {
+  margin: -18px 0 30px;
+  padding: 12px 16px;
+  background: var(--dourado-fundo);
+  border: 1px solid #f0dfb8;
+  border-radius: var(--raio);
+  font-size: 15px;
+  color: #5c430b;
+}
+
+.resumo strong { font-weight: 500; }
+
 /* --- aceite --------------------------------------------------------- */
 
 .aceite {

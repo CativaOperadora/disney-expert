@@ -16,7 +16,7 @@
  * ler corretamente registros antigos depois que o formulário evoluir.
  */
 
-export const VERSAO_FORMULARIO = 1;
+export const VERSAO_FORMULARIO = 2;
 
 export type TipoCampo =
   | 'texto'
@@ -83,20 +83,20 @@ export const PERGUNTAS: Pergunta[] = [
 
   // ---------------------------------------------------------------- passo 2
   {
-    id: 'quantas_pessoas',
+    id: 'quantos_adultos',
     passo: 2,
-    rotulo: 'Quantas pessoas vão viajar?',
+    rotulo: 'Quantos adultos vão viajar?',
+    ajuda: 'Considere adultos todos a partir de 9 anos.',
     tipo: 'numero',
     obrigatoria: true,
     min: 1,
     max: 30,
-    coluna: 'total_pessoas',
   },
   {
     id: 'quantas_criancas',
     passo: 2,
-    rotulo: 'Dessas, quantas são crianças?',
-    ajuda: 'Consideramos crianças de 0 a 8 anos.',
+    rotulo: 'E quantas crianças?',
+    ajuda: 'Crianças de 0 a 8 anos. Se não houver nenhuma, informe 0.',
     tipo: 'numero',
     obrigatoria: true,
     min: 0,
@@ -293,6 +293,25 @@ const PISO_DA_FAIXA: Record<string, number | null> = {
   'Ainda não sei, quero uma recomendação': null,
 };
 
+/** Converte texto do formulário em número, ou nulo quando vazio. */
+export function paraNumero(v: unknown): number | null {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * O total do grupo é a soma, nunca um campo digitado.
+ * Assim não existe a dúvida de saber se as crianças estavam ou não
+ * incluídas no total informado.
+ */
+export function somarPessoas(respostas: Record<string, any>): number | null {
+  const adultos = paraNumero(respostas.quantos_adultos);
+  const criancas = paraNumero(respostas.quantas_criancas);
+  if (adultos === null) return null;
+  return adultos + (criancas ?? 0);
+}
+
 /**
  * Monta o objeto que a aplicação usa para preencher as colunas promovidas
  * de solicitacoes. O JSONB completo é gravado separadamente, sem passar
@@ -305,8 +324,8 @@ export function projetarColunas(respostas: Record<string, any>) {
     cliente_nome: respostas.nome_completo ?? null,
     cliente_email: respostas.email ?? null,
     cliente_whatsapp: respostas.whatsapp ?? null,
-    total_pessoas: respostas.quantas_pessoas ?? null,
-    total_criancas: respostas.quantas_criancas ?? null,
+    total_pessoas: somarPessoas(respostas),
+    total_criancas: paraNumero(respostas.quantas_criancas),
     primeira_viagem: primeira ? primeira.startsWith('Sim') : null,
     origem_embarque: respostas.origem_embarque ?? null,
     dias_orlando: PISO_DA_FAIXA[respostas.dias_orlando] ?? null,
