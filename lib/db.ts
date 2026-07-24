@@ -1,16 +1,15 @@
 import postgres from 'postgres';
 
 /**
- * Conexão única com o PostgreSQL.
+ * Conexão com o PostgreSQL.
  *
- * Em produção, DATABASE_URL é montada pelo docker-compose apontando para
- * o serviço `db` na rede interna do Docker. O banco não é acessível de
- * fora do servidor, por desenho.
+ * O postgres.js é preguiçoso: só abre soquete na primeira consulta.
+ * Por isso não pode haver validação no carregamento do módulo, senão a
+ * compilação quebra, já que DATABASE_URL só existe quando o container roda.
  */
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL não definida. Confira o arquivo .env.');
-}
+const URL_BANCO =
+  process.env.DATABASE_URL ?? 'postgres://build@localhost:5432/build';
 
 declare global {
   var __sql: ReturnType<typeof postgres> | undefined;
@@ -18,13 +17,17 @@ declare global {
 
 export const sql =
   global.__sql ??
-  postgres(process.env.DATABASE_URL, {
+  postgres(URL_BANCO, {
     max: 10,
     idle_timeout: 20,
     connect_timeout: 10,
     types: {
-      // Devolve date como texto puro, sem conversão de fuso.
-      date: { to: 1082, from: [1082], serialize: (x: any) => x, parse: (x: any) => x },
+      date: {
+        to: 1082,
+        from: [1082],
+        serialize: (x: any) => x,
+        parse: (x: any) => x,
+      },
     },
   });
 
