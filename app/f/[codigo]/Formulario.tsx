@@ -194,7 +194,7 @@ export default function Formulario({
             }`}
           >
             <div className="ponto" />
-            <div className="parada-nome">{s.titulo}</div>
+            <div className="parada-nome">{s.curto}</div>
           </div>
         ))}
       </nav>
