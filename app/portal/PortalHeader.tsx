@@ -12,7 +12,7 @@ export default function PortalHeader({
   return (
     <header className="barra">
       <div className="barra-marca">
-        <img className="barra-logo" src="/logo-cabecalho.png" alt="Orlando Expert" />
+        <img className="barra-logo" src="/logo-cativa.png" alt="Cativa Orlando Expert" />
         <span className="marca-divisor" />
         <span className="marca-produto">Portal · {sess.agenciaNome}</span>
       </div>

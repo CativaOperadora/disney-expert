@@ -551,7 +551,9 @@ body {
   padding: 0 24px;
   height: 88px;
   background: #ffffff;
-  border-bottom: 1px solid var(--borda);
+  /* Fina moldura azul marinho, para o cabeçalho não se perder no branco. */
+  border-top: 2px solid var(--marca-escura);
+  border-bottom: 3px solid var(--marca-escura);
   flex-shrink: 0;
 }
 
