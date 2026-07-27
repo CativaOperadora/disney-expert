@@ -625,7 +625,9 @@ body {
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 14px 12px;
-  max-height: calc(100vh - 150px);
+  /* Altura fixa e igual em todas as colunas: o excesso de cartões rola
+     dentro da coluna, sem espremer os cartões. */
+  height: calc(100vh - 150px);
   display: flex;
   flex-direction: column;
 }
@@ -659,6 +661,10 @@ body {
 .coluna-espera.nivel-3 { color: #9c3325; }
 
 .coluna-corpo {
+  /* Ocupa a altura restante da coluna e rola por dentro. O min-height:0
+     é o que permite o scroll dentro de um container flex. */
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -684,6 +690,9 @@ body {
   border-radius: 10px;
   overflow: hidden;
   cursor: grab;
+  /* Não encolher: cada cartão mantém a altura confortável de leitura,
+     independentemente de quantos existem na coluna. */
+  flex-shrink: 0;
   transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 

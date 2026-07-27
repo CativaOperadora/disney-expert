@@ -25,13 +25,16 @@ export default function Entrar() {
   }
 
   return (
-    <main className="pagina" style={{ maxWidth: 380, paddingTop: 80 }}>
-      <h1 className="display passo-titulo">Consultoria Disney</h1>
-      <p className="passo-descricao">Acesso da equipe Cativa.</p>
+    <div className="portal-login">
+      <form className="portal-login-cartao" onSubmit={enviar}>
+        <div className="portal-login-marca">
+          <span className="marca-nome">Orlando Expert</span>
+        </div>
+        <h1 className="portal-login-titulo">Painel da consultoria</h1>
+        <p className="portal-login-sub">Acesso da equipe Cativa.</p>
 
-      {erro && <div className="erro-caixa">{erro}</div>}
+        {erro && <div className="erro-caixa">{erro}</div>}
 
-      <form onSubmit={enviar}>
         <div className="campo">
           <label className="rotulo" htmlFor="senha">Senha</label>
           <input
@@ -43,10 +46,10 @@ export default function Entrar() {
             onChange={(e) => setSenha(e.target.value)}
           />
         </div>
-        <button className="botao botao-principal" style={{ width: '100%' }} disabled={indo}>
+        <button className="botao botao-principal" type="submit" disabled={indo}>
           {indo ? 'Entrando…' : 'Entrar'}
         </button>
       </form>
-    </main>
+    </div>
   );
 }

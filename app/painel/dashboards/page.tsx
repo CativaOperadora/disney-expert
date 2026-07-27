@@ -134,14 +134,6 @@ export default async function Dashboards({
             <h3 className="cartao-bi-titulo">Agentes que mais solicitaram</h3>
             <TabelaRanking itens={rankings.agentes} rotuloN="Solicitações" />
           </div>
-          <div className="cartao-bi">
-            <h3 className="cartao-bi-titulo">Consultoras · nº de atendimentos</h3>
-            <TabelaRanking itens={rankings.consultorasAtendimentos} rotuloN="Atendimentos" />
-          </div>
-          <div className="cartao-bi">
-            <h3 className="cartao-bi-titulo">Consultoras · vendas e valor</h3>
-            <TabelaRanking itens={rankings.consultorasVendas} colValor="Valor vendido" rotuloN="Vendas" />
-          </div>
         </section>
 
         {/* ---- Perfil dos clientes ---- */}
