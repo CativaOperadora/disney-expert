@@ -549,16 +549,31 @@ body {
   align-items: center;
   gap: 32px;
   padding: 0 24px;
-  height: 78px;
-  background: var(--marca);
+  height: 88px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--borda);
   flex-shrink: 0;
 }
 
+/* Cabeçalho claro: o logotipo oficial (texto azul) pede fundo branco.
+   Estes overrides deixam os textos do menu escuros, legíveis no branco. */
+.barra .marca-produto,
+.barra .barra-info,
+.barra .voltar-inline,
+.barra .portal-usuario-nome { color: var(--texto-medio); }
+.barra .marca-divisor { background: var(--borda-forte); }
+.barra .sair,
+.barra .barra-link,
+.barra .portal-nav-link:not(.ativa) { color: var(--texto-medio); }
+.barra .sair:hover { color: var(--marca); }
+.barra .barra-link:hover,
+.barra .portal-nav-link:not(.ativa):hover { color: var(--marca); background: var(--fundo); }
+
 .barra-marca { display: flex; align-items: center; gap: 13px; }
 
-/* Logotipo do cabeçalho (globo + wordmark em branco), alinhado ao menu. */
+/* Logotipo oficial no cabeçalho (fundo branco), alinhado ao menu. */
 .barra-logo {
-  height: 40px;
+  height: 66px;
   width: auto;
   display: block;
   flex-shrink: 0;
@@ -635,7 +650,7 @@ body {
   padding: 14px 12px;
   /* Altura fixa e igual em todas as colunas: o excesso de cartões rola
      dentro da coluna, sem espremer os cartões. */
-  height: calc(100vh - 166px);
+  height: calc(100vh - 176px);
   display: flex;
   flex-direction: column;
 }
@@ -972,7 +987,7 @@ body {
 @media (max-width: 560px) {
   .barra { gap: 14px; padding: 0 14px; }
   .marca-produto, .marca-divisor, .coluna-nota { display: none; }
-  .barra-logo { height: 34px; }
+  .barra-logo { height: 52px; }
   .quadro { padding: 16px 14px 10px; }
   .coluna { flex-basis: 284px; }
   .briefing-item { flex-direction: column; gap: 2px; }
