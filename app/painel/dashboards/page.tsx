@@ -8,19 +8,9 @@ import {
 } from '@/lib/bi';
 import Filtros from './Filtros';
 import {
-  KpiCard,
-  BarrasH,
-  Rosca,
-  LinhaEvolucao,
-  BarrasFaturamento,
-  TabelaRanking,
-  fmtInt,
-  fmtReais,
-  fmtPct,
-  fmtDuracao,
-  AZUL,
-  CATEGORICA,
+  KpiCard, BarrasH, Rosca, LinhaEvolucao, BarrasFaturamento, TabelaRanking,
 } from './Graficos';
+import { fmtInt, fmtReais, fmtPct, fmtDuracao, AZUL, CATEGORICA } from './formato';
 
 export const dynamic = 'force-dynamic';
 

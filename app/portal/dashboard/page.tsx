@@ -6,8 +6,10 @@ import { STATUS } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
 import {
   KpiCard, BarrasH, Rosca, LinhaEvolucao, BarrasFaturamento, TabelaRanking,
-  fmtInt, fmtReais, fmtPct, fmtDuracao, AZUL, CATEGORICA,
 } from '../../painel/dashboards/Graficos';
+import {
+  fmtInt, fmtReais, fmtPct, fmtDuracao, AZUL, CATEGORICA,
+} from '../../painel/dashboards/formato';
 
 export const dynamic = 'force-dynamic';
 
