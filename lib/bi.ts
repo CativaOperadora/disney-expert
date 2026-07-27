@@ -322,6 +322,39 @@ async function distribuicoes(f: Filtros) {
   };
 }
 
+// ============================================================ desempenho por agente
+
+export interface DesempenhoAgente {
+  id: string;
+  nome: string;
+  solicitacoes: number;
+  vendas: number;
+  faturamento: number;
+}
+
+/**
+ * Comparativo por agente (uso do admin da agência). O recorte de agência
+ * vem em `f.agencia` (forçado pela sessão do portal), então nunca vaza
+ * agentes de outra organização.
+ */
+export async function desempenhoPorAgente(f: Filtros): Promise<DesempenhoAgente[]> {
+  const rows = await sql<
+    { id: string; nome: string; solicitacoes: number; vendas: number; faturamento: string }[]
+  >`
+    select a.id, a.nome,
+           count(s.id)::int as solicitacoes,
+           count(s.id) filter (where s.status = 'venda_finalizada')::int as vendas,
+           coalesce(sum(s.valor_total_venda) filter (where s.status = 'venda_finalizada'), 0) as faturamento
+    from agentes a
+    join solicitacoes s on s.agente_id = a.id and s.status <> 'duplicada'
+    where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)}
+    group by a.id, a.nome
+    order by faturamento desc, solicitacoes desc
+    limit 100
+  `;
+  return rows.map((r) => ({ ...r, faturamento: num(r.faturamento) }));
+}
+
 // ================================================================ opções de filtro
 
 export interface OpcoesFiltro {

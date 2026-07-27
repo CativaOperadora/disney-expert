@@ -1504,3 +1504,55 @@ body {
   .portal-topo-acoes { flex-direction: column-reverse; align-items: stretch; }
   .pk-coluna { flex-basis: 250px; height: auto; max-height: 66vh; }
 }
+
+/* --- Meu Link de Formulário --- */
+.portal-estreito { max-width: 660px; }
+.link-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+.link-card {
+  display: flex;
+  gap: 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  padding: 18px;
+  align-items: flex-start;
+}
+.link-card.inativo { opacity: 0.6; }
+.link-qr {
+  width: 132px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 8px;
+}
+.link-qr svg { width: 100%; height: auto; display: block; }
+.link-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.link-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.link-nome { font-size: 16px; font-weight: 600; color: var(--texto); margin: 0; }
+.link-agencia { font-size: 13px; color: var(--texto-fraco); margin: 2px 0 0; }
+.link-url {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: var(--marca);
+  background: var(--marca-fundo);
+  border: 1px solid var(--marca-linha);
+  border-radius: 7px;
+  padding: 7px 10px;
+  margin: 12px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.link-btn { flex: none; padding: 8px 14px; font-size: 13px; text-decoration: none; }
+.link-toggle { margin-left: auto; }
+
+@media (max-width: 520px) {
+  .link-card { flex-direction: column; align-items: stretch; }
+  .link-qr { width: 150px; align-self: center; }
+}

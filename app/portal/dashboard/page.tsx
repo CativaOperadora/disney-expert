@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { sessaoPortal } from '@/lib/portal-auth';
 import { sql } from '@/lib/db';
-import { carregarDashboard, FILTROS_VAZIOS, type Filtros } from '@/lib/bi';
+import { carregarDashboard, desempenhoPorAgente, FILTROS_VAZIOS, type Filtros } from '@/lib/bi';
 import { STATUS } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
 import {
@@ -53,7 +53,10 @@ export default async function PortalDashboard({
     agente: sess.admin ? agenteSel : sess.agenteId,
   };
 
-  const dados = await carregarDashboard(filtros);
+  const [dados, desempenho] = await Promise.all([
+    carregarDashboard(filtros),
+    sess.admin ? desempenhoPorAgente(filtros) : Promise.resolve([]),
+  ]);
   const { atual, evolucao, rankings, distribuicoes: dist } = dados;
 
   return (
@@ -120,6 +123,38 @@ export default async function PortalDashboard({
             <BarrasFaturamento pontos={evolucao} gran={filtros.granularidade} />
           </div>
         </section>
+
+        {sess.admin && desempenho.length > 0 && (
+          <section className="cartao-bi" style={{ marginBottom: 16 }}>
+            <h3 className="cartao-bi-titulo">Desempenho por agente</h3>
+            <table className="rank-tabela">
+              <thead>
+                <tr>
+                  <th className="rank-pos">#</th>
+                  <th>Agente</th>
+                  <th className="rank-num">Solicitações</th>
+                  <th className="rank-num">Vendas</th>
+                  <th className="rank-num">Conversão</th>
+                  <th className="rank-num">Faturamento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {desempenho.map((d, i) => (
+                  <tr key={d.id}>
+                    <td className="rank-pos">{i + 1}</td>
+                    <td><span className="rank-nome">{d.nome}</span></td>
+                    <td className="rank-num">{fmtInt(d.solicitacoes)}</td>
+                    <td className="rank-num">{fmtInt(d.vendas)}</td>
+                    <td className="rank-num">
+                      {d.solicitacoes > 0 ? fmtPct(d.vendas / d.solicitacoes) : '—'}
+                    </td>
+                    <td className="rank-num">{fmtReais(d.faturamento)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
 
         <section className="bi-grade">
           {sess.admin && (
