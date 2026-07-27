@@ -34,7 +34,8 @@ export default async function PortalHome({
     ate: texto(sp.ate),
   };
   const linhas = await listarSolicitacoes(sess, filtros);
-  const vista = texto(sp.vista) === 'kanban' ? 'kanban' : 'lista';
+  // Kanban é a visualização padrão; a lista é opcional.
+  const vista = texto(sp.vista) === 'lista' ? 'lista' : 'kanban';
 
   const vendas = linhas.filter((l) => l.status === 'venda_finalizada');
   const faturamento = vendas.reduce((s, l) => s + Number(l.valor_total_venda ?? 0), 0);

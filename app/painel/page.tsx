@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { sql } from '@/lib/db';
-import Quadro, { type Cartao } from './Quadro';
+import Quadro, { type Cartao, type Coluna } from './Quadro';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Painel() {
   const cartoes = await sql<Cartao[]>`
     select
-      s.id, s.protocolo, s.status, s.completude,
+      s.id, s.protocolo, s.status, s.completude, s.responsavel_id,
       s.data_prevista_texto, s.total_pessoas, s.total_criancas,
       s.criado_em, s.primeiro_atendimento_em,
       ag.nome      as agencia_nome,
@@ -23,11 +23,33 @@ export default async function Painel() {
     left join agencias ag on ag.id = s.agencia_id
     where s.status <> 'duplicada'
     order by s.criado_em desc
-    limit 400
+    limit 600
   `;
 
+  // Consultoras ativas: uma coluna de consultoria por especialista.
+  const consultoras = await sql<{ id: string; nome: string }[]>`
+    select id, nome from usuarios
+    where papel = 'especialista' and ativo
+    order by nome
+  `;
+
+  // As colunas do Kanban misturam status e carteira por consultora.
+  const colunas: Coluna[] = [
+    { chave: 'nova_solicitacao', titulo: 'Nova solicitação', status: 'nova_solicitacao', consultoraId: null, nota: 'Chegou, ninguém assumiu' },
+    ...consultoras.map((c) => ({
+      chave: `cons:${c.id}`,
+      titulo: `Consultoria ${c.nome.split(' ')[0]}`,
+      status: 'consultoria_realizada',
+      consultoraId: c.id,
+      nota: 'Carteira da consultora',
+    })),
+    { chave: 'venda_finalizada', titulo: 'Venda finalizada', status: 'venda_finalizada', consultoraId: null, nota: 'Reserva confirmada' },
+    { chave: 'venda_perdida', titulo: 'Venda perdida', status: 'venda_perdida', consultoraId: null },
+    { chave: 'concluida', titulo: 'Concluídas', status: 'concluida', consultoraId: null, nota: 'Encerrada e arquivada' },
+  ];
+
   const abertas = cartoes.filter(
-    (c) => !['venda_finalizada', 'venda_perdida'].includes(c.status),
+    (c) => !['venda_finalizada', 'venda_perdida', 'concluida'].includes(c.status),
   ).length;
 
   return (
@@ -52,7 +74,7 @@ export default async function Painel() {
         </Link>
       </header>
 
-      <Quadro cartoes={cartoes} agora={Date.now()} />
+      <Quadro cartoes={cartoes} colunas={colunas} agora={Date.now()} />
     </div>
   );
 }

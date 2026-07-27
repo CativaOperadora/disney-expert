@@ -43,12 +43,17 @@ export async function POST(
       if (!STATUS_VALIDOS.includes(corpo.status)) {
         return NextResponse.json({ erro: 'Status inválido.' }, { status: 400 });
       }
-      const motivo =
-        corpo.status === 'venda_perdida' && MOTIVOS_VALIDOS.includes(corpo.motivo)
-          ? corpo.motivo
-          : corpo.status === 'venda_perdida'
-            ? 'sem_retorno_agencia'
-            : null;
+      // Motivo é obrigatório ao mover para Venda perdida.
+      if (corpo.status === 'venda_perdida' && !MOTIVOS_VALIDOS.includes(corpo.motivo)) {
+        return NextResponse.json({ erro: 'Informe o motivo da perda.' }, { status: 422 });
+      }
+      const motivo = corpo.status === 'venda_perdida' ? corpo.motivo : null;
+
+      // Consultora responsável (opcional; enviado ao mover para uma coluna
+      // de consultoria). Vazio mantém a atribuição atual.
+      const novoResp = /^[0-9a-f-]{36}$/i.test(String(corpo.responsavel ?? ''))
+        ? corpo.responsavel
+        : null;
 
       const [antes] = await sql<{ status: string; valor_total_venda: string | null }[]>`
         select status, valor_total_venda from solicitacoes where id = ${id}
@@ -79,6 +84,8 @@ export async function POST(
         set status = ${corpo.status}::status_solicitacao,
             motivo_perda = ${motivo}::motivo_perda,
             valor_total_venda = ${valorVenda},
+            responsavel_id = coalesce(${novoResp}::uuid, responsavel_id),
+            status_em = case when status <> ${corpo.status}::status_solicitacao then now() else status_em end,
             primeiro_atendimento_em = case
               when ${corpo.status} <> 'nova_solicitacao'
                and primeiro_atendimento_em is null then now()

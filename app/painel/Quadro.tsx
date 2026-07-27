@@ -3,12 +3,13 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { STATUS, calcularSla } from '@/lib/sla';
+import { calcularSla, MOTIVOS_PERDA } from '@/lib/sla';
 
 export interface Cartao {
   id: string;
   protocolo: string;
   status: string;
+  responsavel_id: string | null;
   completude: number;
   data_prevista_texto: string | null;
   total_pessoas: number | null;
@@ -22,11 +23,28 @@ export interface Cartao {
   email_falhou: boolean;
 }
 
+export interface Coluna {
+  chave: string;
+  titulo: string;
+  status: string;
+  consultoraId: string | null;
+  nota?: string;
+}
+
+/** Um cartão pertence a uma coluna pelo status e, na consultoria, pela consultora. */
+function naColuna(c: Cartao, col: Coluna): boolean {
+  if (c.status !== col.status) return false;
+  if (col.consultoraId === null) return true;
+  return c.responsavel_id === col.consultoraId;
+}
+
 export default function Quadro({
   cartoes: iniciais,
+  colunas,
   agora,
 }: {
   cartoes: Cartao[];
+  colunas: Coluna[];
   agora: number;
 }) {
   const router = useRouter();
@@ -35,17 +53,21 @@ export default function Quadro({
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // Modal de motivo da perda: guarda o cartão a mover e a coluna destino.
+  const [perda, setPerda] = useState<{ id: string; col: Coluna } | null>(null);
+  const [motivo, setMotivo] = useState('');
 
-  async function mover(id: string, destino: string) {
+  async function mover(id: string, col: Coluna, motivoPerda?: string) {
     const anterior = cartoes;
     setCartoes((c) =>
       c.map((x) =>
         x.id === id
           ? {
               ...x,
-              status: destino,
+              status: col.status,
+              responsavel_id: col.consultoraId ?? x.responsavel_id,
               primeiro_atendimento_em:
-                destino !== 'nova_solicitacao' && !x.primeiro_atendimento_em
+                col.status !== 'nova_solicitacao' && !x.primeiro_atendimento_em
                   ? new Date().toISOString()
                   : x.primeiro_atendimento_em,
             }
@@ -54,11 +76,15 @@ export default function Quadro({
     );
     setErro(null);
 
+    const corpo: any = { acao: 'status', status: col.status };
+    if (col.consultoraId) corpo.responsavel = col.consultoraId;
+    if (col.status === 'venda_perdida') corpo.motivo = motivoPerda;
+
     try {
       const r = await fetch(`/api/painel/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: 'status', status: destino }),
+        body: JSON.stringify(corpo),
       });
       if (!r.ok) throw new Error();
       iniciarTransicao(() => router.refresh());
@@ -68,24 +94,32 @@ export default function Quadro({
     }
   }
 
+  function aoSoltar(col: Coluna, id: string) {
+    const atual = cartoes.find((c) => c.id === id);
+    if (!id || !atual || naColuna(atual, col)) return;
+    if (col.status === 'venda_perdida') {
+      // Abre o modal obrigatório de motivo antes de concluir a movimentação.
+      setMotivo('');
+      setPerda({ id, col });
+    } else {
+      mover(id, col);
+    }
+  }
+
   return (
     <>
       {erro && <div className="faixa-erro">{erro}</div>}
 
       <div className="quadro">
-        {STATUS.map((col) => {
+        {colunas.map((col) => {
           const doColuna = cartoes
-            .filter((c) => c.status === col.id)
+            .filter((c) => naColuna(c, col))
             .map((c) => ({
               ...c,
-              // 'agora' vem do servidor para que SSR e hidratação calculem
-              // a mesma largura de barra e não haja divergência de hidratação.
               sla: calcularSla(c.criado_em, c.sla_horas, c.primeiro_atendimento_em, agora),
             }))
-            // Na entrada, quem vence antes aparece primeiro. Nas demais,
-            // o mais recente no topo.
             .sort((a, b) =>
-              col.id === 'nova_solicitacao'
+              col.status === 'nova_solicitacao'
                 ? a.sla.horasRestantes - b.sla.horasRestantes
                 : +new Date(b.criado_em) - +new Date(a.criado_em),
             );
@@ -96,19 +130,17 @@ export default function Quadro({
 
           return (
             <section
-              key={col.id}
-              className={`coluna ${alvo === col.id ? 'alvo' : ''}`}
+              key={col.chave}
+              className={`coluna ${alvo === col.chave ? 'alvo' : ''}`}
               onDragOver={(e) => {
                 e.preventDefault();
-                setAlvo(col.id);
+                setAlvo(col.chave);
               }}
-              onDragLeave={() => setAlvo((a) => (a === col.id ? null : a))}
+              onDragLeave={() => setAlvo((a) => (a === col.chave ? null : a))}
               onDrop={(e) => {
                 e.preventDefault();
                 setAlvo(null);
-                const id = e.dataTransfer.getData('text/plain');
-                const atual = cartoes.find((c) => c.id === id);
-                if (id && atual && atual.status !== col.id) mover(id, col.id);
+                aoSoltar(col, e.dataTransfer.getData('text/plain'));
               }}
             >
               <header className="coluna-topo">
@@ -117,11 +149,7 @@ export default function Quadro({
                   <span className="coluna-conta">{doColuna.length}</span>
                 </div>
                 {col.nota && <p className="coluna-nota">{col.nota}</p>}
-                {emRisco > 0 && (
-                  <p className="coluna-risco">
-                    {emRisco} {emRisco === 1 ? 'em risco' : 'em risco'}
-                  </p>
-                )}
+                {emRisco > 0 && <p className="coluna-risco">{emRisco} em risco</p>}
               </header>
 
               <div className="coluna-corpo">
@@ -150,8 +178,6 @@ export default function Quadro({
                         )}
                       </div>
 
-                      {/* Quem importa para a Juliana é o agente. O nome do
-                          cliente final aparece só ao abrir o cartão. */}
                       <h3 className="ficha-nome">
                         {c.agente_nome ?? 'Agente não identificado'}
                       </h3>
@@ -191,6 +217,44 @@ export default function Quadro({
           );
         })}
       </div>
+
+      {/* Modal obrigatório de motivo da perda */}
+      {perda && (
+        <div className="modal-fundo" onClick={() => setPerda(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-titulo">Motivo da perda</h3>
+            <p className="modal-texto">
+              Selecione o motivo para mover esta solicitação para <strong>Venda perdida</strong>.
+              É obrigatório.
+            </p>
+            <select
+              className="entrada"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+            >
+              <option value="">Selecione um motivo…</option>
+              {MOTIVOS_PERDA.map(([v, r]) => (
+                <option key={v} value={v}>{r}</option>
+              ))}
+            </select>
+            <div className="modal-acoes">
+              <button className="botao botao-voltar" onClick={() => setPerda(null)}>
+                Cancelar
+              </button>
+              <button
+                className="botao botao-principal"
+                disabled={!motivo}
+                onClick={() => {
+                  mover(perda.id, perda.col, motivo);
+                  setPerda(null);
+                }}
+              >
+                Confirmar perda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

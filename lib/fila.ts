@@ -29,7 +29,32 @@ interface Pendente {
   tentativas: number;
 }
 
+/**
+ * Encerramento automático: toda solicitação que ficou 2 dias completos em
+ * Venda Finalizada ou Venda Perdida vai para "Concluídas", mantendo o
+ * Kanban limpo. Roda junto com o processamento da fila (cron).
+ */
+export async function encerrarAntigas(): Promise<number> {
+  const res = await sql`
+    with movidas as (
+      update solicitacoes
+      set status = 'concluida', status_em = now()
+      where status in ('venda_finalizada', 'venda_perdida')
+        and status_em < now() - interval '2 days'
+      returning id
+    )
+    insert into eventos (solicitacao_id, tipo, descricao)
+    select id, 'status_alterado', 'Encerrada automaticamente (2 dias em venda finalizada/perdida)'
+    from movidas
+    returning solicitacao_id
+  `;
+  return res.count;
+}
+
 export async function processarFila(): Promise<{ enviados: number; falhas: number }> {
+  // Encerramento automático roda mesmo sem provedor de e-mail configurado.
+  await encerrarAntigas().catch((e) => console.error('[fila] encerrar antigas', e));
+
   if (!process.env.EMAIL_API_KEY) {
     console.warn('[fila] EMAIL_API_KEY ausente, nada a enviar');
     return { enviados: 0, falhas: 0 };

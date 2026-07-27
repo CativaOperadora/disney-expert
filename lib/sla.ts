@@ -84,6 +84,7 @@ export const STATUS = [
   { id: 'consultoria_realizada', titulo: 'Em consultoria',     nota: 'Consultoria em andamento com a agência' },
   { id: 'venda_finalizada',      titulo: 'Venda finalizada',   nota: 'Reserva confirmada' },
   { id: 'venda_perdida',         titulo: 'Venda perdida',      nota: '' },
+  { id: 'concluida',             titulo: 'Concluídas',         nota: 'Encerrada e arquivada' },
 ] as const;
 
 export const ROTULO_STATUS: Record<string, string> = Object.fromEntries(
