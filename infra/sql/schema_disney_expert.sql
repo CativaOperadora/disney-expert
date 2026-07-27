@@ -370,8 +370,10 @@ insert into agentes (agencia_id, codigo, nome, email, telefone) values
   ('11111111-1111-1111-1111-111111111111', 'CTV8213',
    'Cláudia Ramos', 'claudia@turismosilva.com.br', '51999990000');
 
-insert into usuarios (nome, email, papel) values
-  ('Especialista Disney', 'disney@cativa.tur.br', 'especialista');
+-- Consultoras reais da Cativa (as duas colunas de consultoria do Kanban).
+insert into usuarios (id, nome, email, papel) values
+  ('c0000000-0000-0000-0000-000000000001', 'Juliana',  'juliana@cativa.tur.br',  'especialista'),
+  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'bighetti@cativa.tur.br', 'especialista');
 
 insert into solicitacoes (
   agente_id, agencia_id, codigo_agente_informado,

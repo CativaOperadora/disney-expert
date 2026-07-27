@@ -29,11 +29,10 @@ insert into agentes (id, agencia_id, codigo, nome, email) values
   ('b0000000-0000-0000-0000-000000000005','a0000000-0000-0000-0000-000000000005','DEMO005','Diego Martins','diego@aventuraorlando.com.br')
 on conflict (id) do nothing;
 
--- Consultoras demo ----------------------------------------------------
+-- Consultoras demo (apenas as reais: Juliana e Bighetti) --------------
 insert into usuarios (id, nome, email, papel) values
-  ('c0000000-0000-0000-0000-000000000001','Juliana Prado','juliana@cativa.tur.br','especialista'),
-  ('c0000000-0000-0000-0000-000000000002','Marina Reis','marinareis@cativa.tur.br','especialista'),
-  ('c0000000-0000-0000-0000-000000000003','Patrícia Gomes','patricia@cativa.tur.br','especialista')
+  ('c0000000-0000-0000-0000-000000000001','Juliana','juliana@cativa.tur.br','especialista'),
+  ('c0000000-0000-0000-0000-000000000004','Bighetti','bighetti@cativa.tur.br','especialista')
 on conflict (id) do nothing;
 
 -- Solicitações demo ---------------------------------------------------
@@ -100,7 +99,7 @@ select
   ),
   status::status_solicitacao,
   case when status <> 'nova_solicitacao'
-       then (array['c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000002','c0000000-0000-0000-0000-000000000003'])[(i % 3) + 1]::uuid end,
+       then (array['c0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000004'])[(i % 2) + 1]::uuid end,
   pat,
   case when status = 'venda_finalizada' then pat + make_interval(days => (i % 12) + 1, hours => (i % 8)) end,
   case when status = 'venda_finalizada' then (8000 + (i % 20) * 800)::numeric end,
