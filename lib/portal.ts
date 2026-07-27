@@ -38,6 +38,7 @@ export interface LinhaSolicitacao {
   total_pessoas: number | null;
   valor_total_venda: string | null;
   agente_nome: string | null;
+  consultora_nome: string | null;
   criado_em: string;
 }
 
@@ -48,9 +49,11 @@ export async function listarSolicitacoes(
   const busca = f.busca?.trim();
   const linhas = await sql<Omit<LinhaSolicitacao, 'status_rotulo'>[]>`
     select s.id, s.protocolo, s.status, s.cliente_nome, s.data_prevista_texto,
-           s.total_pessoas, s.valor_total_venda, a.nome as agente_nome, s.criado_em
+           s.total_pessoas, s.valor_total_venda, a.nome as agente_nome,
+           u.nome as consultora_nome, s.criado_em
     from solicitacoes s
     left join agentes a on a.id = s.agente_id
+    left join usuarios u on u.id = s.responsavel_id
     where ${escopo(sess)}
       and s.status <> 'duplicada'
       ${f.status ? sql`and s.status = ${f.status}::status_solicitacao` : sql``}

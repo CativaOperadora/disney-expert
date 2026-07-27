@@ -1366,3 +1366,141 @@ body {
   .portal { padding: 18px 14px 48px; }
   .portal-nav-link { padding: 7px 9px; font-size: 14px; }
 }
+
+/* --- seletor de vista (Lista / Kanban) --- */
+.portal-topo-acoes { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.seletor-vista {
+  display: inline-flex;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 3px;
+}
+.sv-btn {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texto-medio);
+  padding: 6px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sv-btn.ativo {
+  background: var(--superficie);
+  color: var(--marca);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Kanban do Portal (somente leitura) --- */
+.portal-kanban { margin-top: 2px; }
+.pk-quadro {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  align-items: flex-start;
+}
+.pk-coluna {
+  flex: 0 0 280px;
+  background: rgba(0, 75, 138, 0.035);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 12px 10px;
+  height: calc(100vh - 300px);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.pk-coluna-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 10px;
+  flex-shrink: 0;
+}
+.pk-ponto { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.pk-coluna-titulo { font-size: 13px; font-weight: 600; color: var(--texto); flex: 1; }
+.pk-coluna-conta {
+  font-size: 12px;
+  color: var(--texto-medio);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+.pk-coluna-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 1px;
+}
+.pk-card {
+  display: block;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--borda-forte);
+  border-radius: 9px;
+  padding: 11px 13px;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.pk-card:hover { box-shadow: 0 2px 8px rgba(0, 75, 138, 0.1); transform: translateY(-1px); }
+.pk-card-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.pk-protocolo {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  color: var(--texto-fraco);
+  letter-spacing: 0.04em;
+}
+.pk-agente {
+  font-size: 11px;
+  color: var(--marca);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 55%;
+}
+.pk-nome { font-size: 15px; font-weight: 600; color: var(--texto); margin: 0 0 6px; line-height: 1.25; }
+.pk-linha { font-size: 12.5px; color: var(--texto-medio); margin: 0 0 3px; line-height: 1.4; }
+.pk-consultora { color: var(--texto-fraco); }
+.pk-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f1ef;
+}
+.pk-quando { font-size: 12px; color: var(--texto-fraco); }
+.pk-valor { font-size: 13px; font-weight: 700; color: #1a7a52; }
+.pk-vazio { font-size: 12px; color: var(--texto-fraco); text-align: center; padding: 16px 0; }
+
+/* cores por status — borda esquerda do card e ponto do topo da coluna */
+.status-borda-nova_solicitacao { border-left-color: #0ba7da; }
+.status-borda-consultoria_realizada { border-left-color: #2f6fd0; }
+.status-borda-venda_finalizada { border-left-color: #12a36b; }
+.status-borda-venda_perdida { border-left-color: #b3261e; }
+.status-ponto-nova_solicitacao { background: #0ba7da; }
+.status-ponto-consultoria_realizada { background: #2f6fd0; }
+.status-ponto-venda_finalizada { background: #12a36b; }
+.status-ponto-venda_perdida { background: #b3261e; }
+
+@media (max-width: 640px) {
+  .portal-topo-acoes { flex-direction: column-reverse; align-items: stretch; }
+  .pk-coluna { flex-basis: 250px; height: auto; max-height: 66vh; }
+}

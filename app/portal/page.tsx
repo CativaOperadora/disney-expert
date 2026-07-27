@@ -4,6 +4,8 @@ import { sessaoPortal } from '@/lib/portal-auth';
 import { listarSolicitacoes } from '@/lib/portal';
 import { STATUS } from '@/lib/sla';
 import PortalHeader from './PortalHeader';
+import SeletorVista from './SeletorVista';
+import PortalKanban from './PortalKanban';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +34,7 @@ export default async function PortalHome({
     ate: texto(sp.ate),
   };
   const linhas = await listarSolicitacoes(sess, filtros);
+  const vista = texto(sp.vista) === 'kanban' ? 'kanban' : 'lista';
 
   const vendas = linhas.filter((l) => l.status === 'venda_finalizada');
   const faturamento = vendas.reduce((s, l) => s + Number(l.valor_total_venda ?? 0), 0);
@@ -52,31 +55,36 @@ export default async function PortalHome({
                 : 'O histórico completo das suas tratativas com a consultoria Orlando Expert.'}
             </p>
           </div>
-          <Link href="/portal/dashboard" className="botao botao-principal portal-cta">
-            Ver dashboard
-          </Link>
+          <div className="portal-topo-acoes">
+            <SeletorVista vista={vista} />
+            <Link href="/portal/dashboard" className="botao botao-principal portal-cta">
+              Ver dashboard
+            </Link>
+          </div>
         </div>
 
-        <div className="portal-tiles">
-          <div className="portal-tile">
-            <span className="portal-tile-num">{linhas.length}</span>
-            <span className="portal-tile-rot">solicitações</span>
+        {vista !== 'kanban' && (
+          <div className="portal-tiles">
+            <div className="portal-tile">
+              <span className="portal-tile-num">{linhas.length}</span>
+              <span className="portal-tile-rot">solicitações</span>
+            </div>
+            <div className="portal-tile">
+              <span className="portal-tile-num">
+                {linhas.filter((l) => l.status === 'consultoria_realizada').length}
+              </span>
+              <span className="portal-tile-rot">em consultoria</span>
+            </div>
+            <div className="portal-tile">
+              <span className="portal-tile-num">{vendas.length}</span>
+              <span className="portal-tile-rot">vendas</span>
+            </div>
+            <div className="portal-tile">
+              <span className="portal-tile-num">{reais(String(faturamento))}</span>
+              <span className="portal-tile-rot">faturamento</span>
+            </div>
           </div>
-          <div className="portal-tile">
-            <span className="portal-tile-num">
-              {linhas.filter((l) => l.status === 'consultoria_realizada').length}
-            </span>
-            <span className="portal-tile-rot">em consultoria</span>
-          </div>
-          <div className="portal-tile">
-            <span className="portal-tile-num">{vendas.length}</span>
-            <span className="portal-tile-rot">vendas</span>
-          </div>
-          <div className="portal-tile">
-            <span className="portal-tile-num">{reais(String(faturamento))}</span>
-            <span className="portal-tile-rot">faturamento</span>
-          </div>
-        </div>
+        )}
 
         <form className="portal-filtros" method="get">
           <input
@@ -98,6 +106,9 @@ export default async function PortalHome({
           <Link href="/portal" className="portal-limpar">Limpar</Link>
         </form>
 
+        {vista === 'kanban' ? (
+          <PortalKanban linhas={linhas} admin={sess.admin} />
+        ) : (
         <div className="portal-tabela-wrap">
           <table className="portal-tabela">
             <thead>
@@ -139,6 +150,7 @@ export default async function PortalHome({
             </tbody>
           </table>
         </div>
+        )}
       </main>
     </div>
   );
