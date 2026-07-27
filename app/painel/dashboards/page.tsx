@@ -79,8 +79,8 @@ export default async function Dashboards({
         <div className="barra-marca">
           <Link href="/painel" className="voltar-inline">← Fila</Link>
           <span className="marca-divisor" />
-          <span className="marca-nome">Dashboards</span>
-          <span className="marca-produto">Orlando Expert BI</span>
+          <img className="barra-logo" src="/logo-header-branco.png" alt="Orlando Expert" />
+          <span className="marca-produto">Dashboards</span>
         </div>
         <Link href="/api/sair" className="sair" prefetch={false}>Sair</Link>
       </header>

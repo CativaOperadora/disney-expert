@@ -556,6 +556,14 @@ body {
 
 .barra-marca { display: flex; align-items: center; gap: 13px; }
 
+/* Logotipo do cabeçalho (wordmark branco), alinhado ao menu. */
+.barra-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
 /* Trocar por <img src="/logo.svg" alt="Cativa" height={26} /> quando
    o arquivo do logo estiver em /public. */
 .marca-nome {
@@ -964,6 +972,7 @@ body {
 @media (max-width: 560px) {
   .barra { gap: 14px; padding: 0 14px; }
   .marca-produto, .marca-divisor, .coluna-nota { display: none; }
+  .barra-logo { height: 26px; }
   .quadro { padding: 16px 14px 10px; }
   .coluna { flex-basis: 284px; }
   .briefing-item { flex-direction: column; gap: 2px; }
