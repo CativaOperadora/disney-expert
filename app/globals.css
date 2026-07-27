@@ -431,6 +431,17 @@ body {
   margin-bottom: 20px;
 }
 
+.ok-caixa {
+  background: #e3f5ec;
+  border: 1px solid #b7e2ca;
+  border-radius: 10px;
+  padding: 13px 15px;
+  font-size: 14px;
+  color: #1a7a52;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
 /* --- navegação ---------------------------------------------------------- */
 
 .navegacao { display: flex; gap: 10px; margin-top: 34px; }

@@ -69,6 +69,10 @@ export default async function Painel() {
           Dashboards
         </Link>
 
+        <Link href="/painel/agencias" className="barra-link" prefetch={false}>
+          Agências
+        </Link>
+
         <Link href="/api/sair" className="sair" prefetch={false}>
           Sair
         </Link>
