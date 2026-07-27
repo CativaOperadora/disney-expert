@@ -79,7 +79,7 @@ export default async function Dashboards({
         <div className="barra-marca">
           <Link href="/painel" className="voltar-inline">← Fila</Link>
           <span className="marca-divisor" />
-          <img className="barra-logo" src="/logo-header-branco.png" alt="Orlando Expert" />
+          <img className="barra-logo" src="/logo-header-full.png" alt="Orlando Expert" />
           <span className="marca-produto">Dashboards</span>
         </div>
         <Link href="/api/sair" className="sair" prefetch={false}>Sair</Link>

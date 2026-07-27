@@ -549,16 +549,16 @@ body {
   align-items: center;
   gap: 32px;
   padding: 0 24px;
-  height: 62px;
+  height: 78px;
   background: var(--marca);
   flex-shrink: 0;
 }
 
 .barra-marca { display: flex; align-items: center; gap: 13px; }
 
-/* Logotipo do cabeçalho (wordmark branco), alinhado ao menu. */
+/* Logotipo do cabeçalho (globo + wordmark em branco), alinhado ao menu. */
 .barra-logo {
-  height: 30px;
+  height: 46px;
   width: auto;
   display: block;
   flex-shrink: 0;
@@ -635,7 +635,7 @@ body {
   padding: 14px 12px;
   /* Altura fixa e igual em todas as colunas: o excesso de cartões rola
      dentro da coluna, sem espremer os cartões. */
-  height: calc(100vh - 150px);
+  height: calc(100vh - 166px);
   display: flex;
   flex-direction: column;
 }
@@ -972,7 +972,7 @@ body {
 @media (max-width: 560px) {
   .barra { gap: 14px; padding: 0 14px; }
   .marca-produto, .marca-divisor, .coluna-nota { display: none; }
-  .barra-logo { height: 26px; }
+  .barra-logo { height: 40px; }
   .quadro { padding: 16px 14px 10px; }
   .coluna { flex-basis: 284px; }
   .briefing-item { flex-direction: column; gap: 2px; }
