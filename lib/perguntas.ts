@@ -16,7 +16,7 @@
  * ler corretamente registros antigos depois que o formulário evoluir.
  */
 
-export const VERSAO_FORMULARIO = 3;
+export const VERSAO_FORMULARIO = 4;
 
 export type TipoCampo =
   | 'texto'
@@ -303,6 +303,20 @@ export const PERGUNTAS: Pergunta[] = [
     obrigatoria: true,
     coluna: 'consentimento_lgpd',
   },
+  // Opt-in de marketing: OPCIONAL e deliberadamente separado do aceite
+  // acima. O consentimento obrigatório cobre só a elaboração da proposta;
+  // campanha é outra finalidade e, pela LGPD, precisa de aceite próprio.
+  // Marcar esta caixa nunca pode ser condição para enviar o formulário.
+  {
+    id: 'aceite_marketing',
+    passo: 5,
+    rotulo:
+      'Quero receber ofertas e novidades de viagem da minha agência.',
+    ajuda: 'Opcional. Você pode pedir a remoção quando quiser.',
+    tipo: 'aceite',
+    obrigatoria: false,
+    coluna: 'aceite_marketing',
+  },
 ];
 
 // =====================================================================
@@ -390,6 +404,7 @@ export function projetarColunas(respostas: Record<string, any>) {
     dias_parques: PISO_DA_FAIXA[respostas.dias_parques] ?? null,
     parques: Array.isArray(respostas.parques) ? respostas.parques : null,
     consentimento_lgpd: respostas.consentimento_lgpd === true,
+    aceite_marketing: respostas.aceite_marketing === true,
   };
 }
 

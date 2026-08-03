@@ -113,7 +113,8 @@ export async function POST(req: NextRequest) {
         data_prevista, data_prevista_texto, origem_embarque,
         dias_orlando, dias_parques, parques,
         respostas, versao_formulario,
-        consentimento_lgpd, consentimento_ip, consentimento_em
+        consentimento_lgpd, consentimento_ip, consentimento_em,
+        aceite_marketing, aceite_marketing_em
       ) values (
         ${agente.agente_id}, ${agente.agencia_id}, ${codigo},
         ${req.headers.get('referer')},
@@ -122,7 +123,8 @@ export async function POST(req: NextRequest) {
         ${dataPrevista}, ${dataTexto}, ${col.origem_embarque},
         ${col.dias_orlando}, ${col.dias_parques}, ${col.parques},
         ${sql.json(limpas)}, ${VERSAO_FORMULARIO},
-        ${col.consentimento_lgpd}, ${ip}, now()
+        ${col.consentimento_lgpd}, ${ip}, now(),
+        ${col.aceite_marketing}, ${col.aceite_marketing ? sql`now()` : null}
       )
       returning id, protocolo
     `;

@@ -6,7 +6,7 @@ export default function PortalHeader({
   ativo,
 }: {
   sess: SessaoPortal;
-  ativo?: 'sol' | 'dash' | 'link' | 'user';
+  ativo?: 'sol' | 'leads' | 'dash' | 'link' | 'user';
 }) {
   const cls = (a: string) => `portal-nav-link${ativo === a ? ' ativa' : ''}`;
   return (
@@ -19,6 +19,7 @@ export default function PortalHeader({
 
       <nav className="portal-nav">
         <Link className={cls('sol')} href="/portal">Solicitações</Link>
+        <Link className={cls('leads')} href="/portal/leads">Leads</Link>
         <Link className={cls('dash')} href="/portal/dashboard">Dashboard</Link>
         <Link className={cls('link')} href="/portal/meu-link">Meu Link</Link>
         {sess.admin && (
