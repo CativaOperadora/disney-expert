@@ -149,6 +149,38 @@ Uma vez por mês, restaure um backup em um banco de teste e confira se os
 dados aparecem. Backup nunca testado costuma não funcionar exatamente no
 dia em que é necessário.
 
+---
+
+## Zerar a base para uma rodada de testes
+
+Só faz sentido **antes do lançamento oficial**, para a equipe testar o
+fluxo do zero. Apaga todas as solicitações, agências e agentes, e cria 20
+agências fictícias com 60 logins prontos.
+
+> **Isto é irreversível.** Rode o backup manual antes:
+> `bash /opt/disney-expert/infra/backup.sh`
+
+```bash
+cd /opt/disney-expert/infra
+docker compose exec -T -e PGOPTIONS="-c disney.reset=CONFIRMO" \
+  db psql -U disney -d disney_expert < sql/reset_testes.sql
+```
+
+Sem o `PGOPTIONS` o script aborta sem apagar nada — é a trava que impede
+rodar isto em produção por engano.
+
+Ao final ele imprime a tabela de credenciais. Todos os logins usam a senha
+**`teste123`**, no padrão `admin@<agencia>.teste`, `agente1@<agencia>.teste`
+e `agente2@<agencia>.teste`.
+
+Os domínios `.teste` não existem na internet, então **os e-mails do
+sistema vão falhar de propósito** e nenhuma mensagem chega a uma caixa
+real. Para acompanhar os e-mails durante o teste, preencha `EMAIL_TESTE`
+no `infra/.env`: toda mensagem passa a ser redirecionada para esse
+endereço.
+
+Depois do lançamento, remova `sql/reset_testes.sql` do servidor.
+
 ```bash
 docker compose exec db createdb -U disney teste_restauracao
 gunzip -c ../backups/<arquivo>.sql.gz | \

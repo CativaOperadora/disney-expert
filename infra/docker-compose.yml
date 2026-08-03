@@ -32,6 +32,8 @@ services:
       - ./sql/migracao_003_id_reserva_crm.sql:/docker-entrypoint-initdb.d/03_id_reserva.sql:ro
       - ./sql/migracao_004_bi_financeiro.sql:/docker-entrypoint-initdb.d/04_bi.sql:ro
       - ./sql/migracao_005_portal_agentes.sql:/docker-entrypoint-initdb.d/05_portal.sql:ro
+      - ./sql/migracao_006_kanban_consultoras.sql:/docker-entrypoint-initdb.d/06_kanban.sql:ro
+      - ./sql/migracao_007_consultoras_reais.sql:/docker-entrypoint-initdb.d/07_consultoras.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
