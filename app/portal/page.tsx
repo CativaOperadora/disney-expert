@@ -44,7 +44,8 @@ export default async function PortalHome({
     <div className="tela">
       <PortalHeader sess={sess} ativo="sol" />
 
-      <main className="portal">
+      {/* O quadro usa a largura toda; a lista mantém o limite de leitura. */}
+      <main className={`portal${vista === 'kanban' ? ' portal-largo' : ''}`}>
         <div className="portal-topo">
           <div>
             <h1 className="portal-titulo">
