@@ -2,23 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { sessaoValida } from '@/lib/auth';
 import { STATUS, MOTIVOS_PERDA } from '@/lib/sla';
+import { paraReais } from '@/lib/valores';
 
 export const runtime = 'nodejs';
 
 const STATUS_VALIDOS = STATUS.map((s) => s.id) as readonly string[];
 const MOTIVOS_VALIDOS = MOTIVOS_PERDA.map((m) => m[0]) as readonly string[];
-
-/** Converte "R$ 12.500,00", "12500", "12.500,00" ou número em reais. */
-function paraReais(v: unknown): number | null {
-  if (typeof v === 'number') return Number.isFinite(v) && v >= 0 ? v : null;
-  if (typeof v !== 'string') return null;
-  let s = v.replace(/[^\d,.-]/g, '').trim();
-  if (!s) return null;
-  // Formato brasileiro: ponto de milhar e vírgula decimal.
-  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
-  const n = Number(s);
-  return Number.isFinite(n) && n >= 0 ? n : null;
-}
 
 export async function POST(
   req: NextRequest,

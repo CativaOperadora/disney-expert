@@ -5,6 +5,7 @@ import { detalheSolicitacao, timelineSolicitacao } from '@/lib/portal';
 import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
 import { MOTIVOS_PERDA } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
+import CamposVenda from './CamposVenda';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,19 +110,37 @@ export default async function PortalDetalhe({
           </div>
 
           <aside className="portal-det-lado">
-            {/* Venda */}
+            {/* Venda — leitura em vendas perdidas; editável nas demais.
+                O acesso já é garantido por detalheSolicitacao(sess, id):
+                agente só alcança o que originou, admin toda a agência. */}
             <section className="cartao-bi">
               <h3 className="cartao-bi-titulo">Venda</h3>
-              {ganha ? (
-                <dl className="portal-dl">
-                  <div><dt>Valor da venda</dt><dd className="valor-forte">{reais(s.valor_total_venda)}</dd></div>
-                  <div><dt>ID da reserva</dt><dd>{s.id_reserva ?? '—'}</dd></div>
-                  <div><dt>Fechada em</dt><dd>{s.venda_em ? DATAHORA.format(new Date(s.venda_em)) : '—'}</dd></div>
-                </dl>
-              ) : perdida ? (
-                <p className="portal-nota">Venda não concretizada{s.motivo_perda ? ` · ${MOTIVO[s.motivo_perda] ?? s.motivo_perda}` : ''}.</p>
+              {perdida ? (
+                <p className="portal-nota">
+                  Venda não concretizada
+                  {s.motivo_perda ? ` · ${MOTIVO[s.motivo_perda] ?? s.motivo_perda}` : ''}.
+                </p>
               ) : (
-                <p className="portal-nota">Atendimento em andamento. Os dados da venda aparecem aqui quando ela for concluída.</p>
+                <>
+                  {ganha && (
+                    <dl className="portal-dl" style={{ marginBottom: 20 }}>
+                      <div>
+                        <dt>Valor registrado</dt>
+                        <dd className="valor-forte">{reais(s.valor_total_venda)}</dd>
+                      </div>
+                      <div>
+                        <dt>Fechada em</dt>
+                        <dd>{s.venda_em ? DATAHORA.format(new Date(s.venda_em)) : '—'}</dd>
+                      </div>
+                    </dl>
+                  )}
+                  <CamposVenda
+                    id={s.id}
+                    valorVenda={s.valor_total_venda}
+                    idReserva={s.id_reserva}
+                    ganha={ganha}
+                  />
+                </>
               )}
             </section>
 

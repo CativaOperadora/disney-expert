@@ -71,7 +71,9 @@ export default function PortalKanban({
                       <span className="pk-quando">
                         {DATA.format(new Date(c.criado_em))}
                       </span>
-                      {c.status === 'venda_finalizada' && (
+                      {/* Mostra o valor sempre que houver: a agência pode
+                          registrá-lo antes da consultoria fechar a venda. */}
+                      {c.valor_total_venda != null && (
                         <span className="pk-valor">{reais(c.valor_total_venda)}</span>
                       )}
                     </div>

@@ -3,13 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { STATUS, MOTIVOS_PERDA } from '@/lib/sla';
-
-/** Formata um número em reais no padrão brasileiro, sem depender de locale. */
-function formatarBRL(n: number): string {
-  const [inteiro, dec] = n.toFixed(2).split('.');
-  const milhar = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${milhar},${dec}`;
-}
+import { formatarBRL } from '@/lib/valores';
 
 export default function Acoes({
   id,

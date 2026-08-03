@@ -1,5 +1,6 @@
 import { sql } from './db';
 import { STATUS } from './sla';
+import { formatarBRL } from './valores';
 import type { SessaoPortal } from './portal-auth';
 
 /**
@@ -11,7 +12,7 @@ import type { SessaoPortal } from './portal-auth';
  * via sessão. É o que garante o isolamento multi-tenant.
  */
 
-function escopo(sess: SessaoPortal) {
+export function escopo(sess: SessaoPortal) {
   return sess.admin
     ? sql`s.agencia_id = ${sess.agenciaId}`
     : sql`s.agente_id = ${sess.agenteId}`;
@@ -139,6 +140,55 @@ export async function timelineSolicitacao(id: string): Promise<EventoPortal[]> {
     }
     return { tipo: e.tipo, rotulo, descricao: e.descricao, criado_em: e.criado_em };
   });
+}
+
+// ======================================================= edição dos dados de venda
+
+/**
+ * Grava valor da venda / ID da reserva a partir do Portal.
+ *
+ * PERMISSÃO: reaproveita `escopo(sess)` no próprio UPDATE — admin alcança
+ * qualquer solicitação da agência, agente só as que ele originou. Um id
+ * fora do escopo não atualiza nada e devolve false (indistinguível de
+ * inexistente, do ponto de vista do portal).
+ *
+ * NÃO altera `status` nem `venda_em`: a etapa do atendimento continua sendo
+ * exclusividade do CRM interno da consultoria.
+ */
+export async function atualizarVendaPortal(
+  sess: SessaoPortal,
+  id: string,
+  campo: 'valor_total_venda' | 'id_reserva',
+  valor: number | string | null,
+): Promise<boolean> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return false;
+
+  const upd =
+    campo === 'valor_total_venda'
+      ? await sql`
+          update solicitacoes s set valor_total_venda = ${valor as number | null}
+          where s.id = ${id} and ${escopo(sess)} and s.status <> 'duplicada'`
+      : await sql`
+          update solicitacoes s set id_reserva = ${valor as string | null}
+          where s.id = ${id} and ${escopo(sess)} and s.status <> 'duplicada'`;
+
+  if (upd.count === 0) return false;
+
+  // Rastro na linha do tempo: o número alimenta o faturamento do BI, então
+  // quem mudou e para quanto precisa ficar registrado.
+  const descricao =
+    campo === 'valor_total_venda'
+      ? `${sess.nome} (${sess.agenciaNome}) definiu o valor da venda: ${
+          valor == null ? 'em branco' : `R$ ${formatarBRL(Number(valor))}`
+        }`
+      : `${sess.nome} (${sess.agenciaNome}) definiu o ID da reserva: ${valor || 'em branco'}`;
+
+  await sql`
+    insert into eventos (solicitacao_id, tipo, descricao, payload)
+    values (${id}, 'comentario', ${descricao},
+            ${sql.json({ origem: 'portal', campo, agente_id: sess.agenteId })})
+  `;
+  return true;
 }
 
 // =================================================== gestão de usuários (admin)
