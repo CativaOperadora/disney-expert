@@ -63,8 +63,8 @@ alter sequence protocolo_seq restart with 1;
 -- 2. Consultoras internas — garante que continuam ativas
 -- ---------------------------------------------------------------------
 insert into usuarios (id, nome, email, papel) values
-  ('c0000000-0000-0000-0000-000000000001', 'Juliana',  'juliana@cativa.tur.br',  'especialista'),
-  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'bighetti@cativa.tur.br', 'especialista')
+  ('c0000000-0000-0000-0000-000000000001', 'Juliana',  'atendimentosp7@cativaoperadora.com.br',  'especialista'),
+  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'atendimentosp1@cativaoperadora.com.br', 'especialista')
 on conflict (id) do nothing;
 update usuarios set ativo = true
   where id in ('c0000000-0000-0000-0000-000000000001',

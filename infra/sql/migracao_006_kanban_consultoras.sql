@@ -23,7 +23,7 @@ update solicitacoes
 update usuarios set nome = 'Juliana'
   where id = 'c0000000-0000-0000-0000-000000000001';
 insert into usuarios (id, nome, email, papel) values
-  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'bighetti@cativa.tur.br', 'especialista')
+  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'atendimentosp1@cativaoperadora.com.br', 'especialista')
 on conflict (id) do nothing;
 update usuarios set ativo = false
   where papel = 'especialista'
