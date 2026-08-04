@@ -2408,17 +2408,26 @@ a.portal-usuario-nome:hover { color: var(--marca); }
 .login-arte-simples { justify-content: center; align-items: center; }
 .login-arte-assinatura {
   position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  /* Gap pequeno: a marca e a assinatura sao UM bloco, nao dois. O PNG
+     ainda traz respiro proprio embaixo, entao o valor efetivo e maior
+     do que parece aqui. */
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
   text-align: center;
 }
 .login-arte-simples .login-arte-logo {
   width: 300px; max-width: 74vw; margin: 0 auto;
 }
 .login-arte-legenda {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
+  /* Margem negativa: o PNG do logotipo tem area transparente na base
+     (o rastro de particulas), entao o espaco visual e maior que o gap.
+     Isto encosta o texto na marca de verdade, nao na caixa dela. */
+  margin: -26px 0 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.45;
   color: rgba(255, 255, 255, 0.82);
   letter-spacing: 0.01em;
-  max-width: 320px;
+  /* Cabe em UMA linha nos 18px; assinatura quebrada em duas perde forca.
+     Em tela estreita o max-width em vw deixa quebrar naturalmente. */
+  max-width: min(420px, 80vw);
 }

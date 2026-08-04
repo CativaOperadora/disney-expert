@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile, readFile, unlink } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, unlink, access, constants } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { sql } from './db';
 import { MAX_ARQUIVOS, MAX_BYTES, LIMITE_MB } from './anexos-limites';
@@ -28,6 +28,32 @@ export { MAX_ARQUIVOS, MAX_BYTES, LIMITE_MB };
 /** Diretório dos anexos. Volume próprio no Docker; ./uploads em dev. */
 function diretorio(): string {
   return resolve(process.env.DIRETORIO_ANEXOS ?? './uploads');
+}
+
+/**
+ * Garante o diretório e traduz falha de permissão numa mensagem útil.
+ *
+ * O modo de falha real em produção: volume Docker criado antes de o
+ * caminho existir na imagem nasce root, e a aplicação roda como uid 1001.
+ * O erro cru (EACCES num caminho interno do contêiner) não diz nada a
+ * quem está olhando a tela — então virou mensagem explícita, com o
+ * comando de correção no log do servidor.
+ */
+async function prepararDiretorio(): Promise<string> {
+  const dir = diretorio();
+  try {
+    await mkdir(dir, { recursive: true });
+    // mkdir não falha se o diretório já existe mas está sem escrita.
+    await access(dir, constants.W_OK);
+    return dir;
+  } catch (e: any) {
+    console.error(
+      `[anexos] sem permissão de escrita em ${dir} (${e?.code ?? e}). ` +
+        'Em Docker, corrija uma vez com: ' +
+        'docker compose exec -u 0 app chown -R 1001:1001 /dados/anexos',
+    );
+    throw new Error('Diretório de anexos indisponível para escrita.');
+  }
 }
 
 /**
@@ -98,8 +124,7 @@ export async function guardarAnexo(
   }
 
   const nomeDisco = `${randomUUID()}.${tipo.ext}`;
-  const dir = diretorio();
-  await mkdir(dir, { recursive: true });
+  const dir = await prepararDiretorio();
   await writeFile(join(dir, nomeDisco), bytes);
 
   try {
@@ -134,8 +159,7 @@ export async function guardarFoto(
     return { ok: false, erro: 'Envie uma imagem JPG, PNG, GIF ou WEBP.' };
   }
   const nome = `perfil-${randomUUID()}.${tipo.ext}`;
-  const dir = diretorio();
-  await mkdir(dir, { recursive: true });
+  const dir = await prepararDiretorio();
   await writeFile(join(dir, nome), bytes);
   return { ok: true, nome };
 }

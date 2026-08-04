@@ -26,21 +26,32 @@ export async function POST(req: NextRequest) {
   const tipo = req.headers.get('content-type') ?? '';
 
   // ---- foto (multipart) ----
+  // Este bloco estava FORA do try/catch: qualquer falha de escrita virava
+  // um 500 sem corpo, e a tela mostrava "não foi possível" sem dizer por
+  // quê. Erro que não se explica custa horas de investigação.
   if (tipo.includes('multipart/form-data')) {
-    const form = await req.formData().catch(() => null);
-    const arquivo = form?.get('foto');
+    try {
+      const form = await req.formData().catch(() => null);
+      const arquivo = form?.get('foto');
 
-    if (form?.get('remover') === '1') {
-      await salvarFoto(eu.tabela, eu.id, null);
-      return NextResponse.json({ ok: true, foto: null });
+      if (form?.get('remover') === '1') {
+        await salvarFoto(eu.tabela, eu.id, null);
+        return NextResponse.json({ ok: true, foto: null });
+      }
+      if (!(arquivo instanceof File)) {
+        return NextResponse.json({ erro: 'Nenhuma imagem enviada.' }, { status: 400 });
+      }
+      const r = await guardarFoto(arquivo);
+      if (!r.ok) return NextResponse.json({ erro: r.erro }, { status: 422 });
+      await salvarFoto(eu.tabela, eu.id, r.nome);
+      return NextResponse.json({ ok: true, foto: r.nome });
+    } catch (e) {
+      console.error('[preferencias] falha ao salvar foto', e);
+      return NextResponse.json(
+        { erro: 'Falha ao gravar a imagem no servidor. Avise o suporte.' },
+        { status: 500 },
+      );
     }
-    if (!(arquivo instanceof File)) {
-      return NextResponse.json({ erro: 'Nenhuma imagem enviada.' }, { status: 400 });
-    }
-    const r = await guardarFoto(arquivo);
-    if (!r.ok) return NextResponse.json({ erro: r.erro }, { status: 422 });
-    await salvarFoto(eu.tabela, eu.id, r.nome);
-    return NextResponse.json({ ok: true, foto: r.nome });
   }
 
   // ---- perfil e senha (json) ----
