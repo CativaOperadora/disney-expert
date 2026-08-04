@@ -31,8 +31,8 @@ on conflict (id) do nothing;
 
 -- Consultoras demo (apenas as reais: Juliana e Bighetti) --------------
 insert into usuarios (id, nome, email, papel) values
-  ('c0000000-0000-0000-0000-000000000001','Juliana','atendimentosp7@cativaoperadora.com.br','especialista'),
-  ('c0000000-0000-0000-0000-000000000004','Bighetti','atendimentosp1@cativaoperadora.com.br','especialista')
+  ('c0000000-0000-0000-0000-000000000001','Juliana Bertolini','atendimentosp7@cativaoperadora.com.br','especialista'),
+  ('c0000000-0000-0000-0000-000000000004','Biguetti','atendimentosp1@cativaoperadora.com.br','especialista')
 on conflict (id) do nothing;
 
 -- Solicitações demo ---------------------------------------------------

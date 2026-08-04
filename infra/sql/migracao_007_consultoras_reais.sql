@@ -10,10 +10,10 @@
 begin;
 
 -- Garante que Juliana e Bighetti existem (idempotente com a 006).
-update usuarios set nome = 'Juliana', ativo = true
+update usuarios set nome = 'Juliana Bertolini', ativo = true
   where id = 'c0000000-0000-0000-0000-000000000001';
 insert into usuarios (id, nome, email, papel) values
-  ('c0000000-0000-0000-0000-000000000004', 'Bighetti', 'atendimentosp1@cativaoperadora.com.br', 'especialista')
+  ('c0000000-0000-0000-0000-000000000004', 'Biguetti', 'atendimentosp1@cativaoperadora.com.br', 'especialista')
 on conflict (id) do nothing;
 update usuarios set ativo = true where id = 'c0000000-0000-0000-0000-000000000004';
 
