@@ -34,34 +34,16 @@ export default function Entrar() {
 
   return (
     <div className="login-tela">
-      <aside className="login-arte" aria-hidden="true">
-        <img className="login-arte-logo" src="/logo-orlando-expert-branco.png" alt="" />
-
-        <div className="login-arte-centro">
-          <h2 className="login-arte-frase">
-            A consultoria <em>Orlando Expert</em>, do briefing ao fechamento.
-          </h2>
-          <p className="login-arte-texto">
-            Fila de atendimento, Kanban por consultora e indicadores da
-            operação inteira.
+      {/* Painel de marca do CRM: só a assinatura, centralizada. O portal
+          da agência mantém a versão com proposta de valor — ali é venda;
+          aqui é a ferramenta interna, e quem entra já sabe o que é. */}
+      <aside className="login-arte login-arte-simples" aria-hidden="true">
+        <div className="login-arte-assinatura">
+          <img className="login-arte-logo" src="/logo-orlando-expert-branco.png" alt="" />
+          <p className="login-arte-legenda">
+            Plataforma de Consultoria Orlando Expert
           </p>
         </div>
-
-        <ul className="login-arte-lista">
-          {[
-            'Fila priorizada por SLA',
-            'Kanban por consultora',
-            'BI de vendas e faturamento',
-          ].map((v) => (
-            <li key={v}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              {v}
-            </li>
-          ))}
-        </ul>
       </aside>
 
       <div className="login-painel">

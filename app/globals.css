@@ -2401,3 +2401,24 @@ a.portal-usuario-nome:hover { color: var(--marca); }
   .menu-usuario-painel { animation: none; }
   .menu-usuario-seta { transition: none; }
 }
+
+/* --- Painel de marca simplificado (login do CRM interno) ---
+   Sem os tres blocos, o space-between do .login-arte nao tem o que
+   distribuir: centraliza o unico bloco na altura e na largura. */
+.login-arte-simples { justify-content: center; align-items: center; }
+.login-arte-assinatura {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  text-align: center;
+}
+.login-arte-simples .login-arte-logo {
+  width: 300px; max-width: 74vw; margin: 0 auto;
+}
+.login-arte-legenda {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.01em;
+  max-width: 320px;
+}
