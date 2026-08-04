@@ -49,6 +49,9 @@ export interface SessaoPortal {
   agenciaId: string;
   agenciaNome: string;
   agenciaTier: string;
+  foto: string | null;
+  tema: string;
+  celebracao: boolean;
 }
 
 /** Valida e-mail + senha, abre a sessão e devolve o usuário. */
@@ -114,10 +117,14 @@ async function carregar(agenteId: string): Promise<SessaoPortal | null> {
       agencia_id: string;
       agencia_nome: string;
       agencia_tier: string;
+      foto: string | null;
+      tema: string;
+      celebracao: boolean;
     }[]
   >`
     select a.id, a.nome, a.email, a.codigo, a.admin,
-           ag.id as agencia_id, ag.nome as agencia_nome, ag.tier as agencia_tier
+           ag.id as agencia_id, ag.nome as agencia_nome, ag.tier as agencia_tier,
+           a.foto, a.tema, a.celebracao
     from agentes a
     join agencias ag on ag.id = a.agencia_id
     where a.id = ${agenteId} and a.ativo and ag.ativa
@@ -133,5 +140,8 @@ async function carregar(agenteId: string): Promise<SessaoPortal | null> {
     agenciaId: a.agencia_id,
     agenciaNome: a.agencia_nome,
     agenciaTier: a.agencia_tier,
+    foto: a.foto,
+    tema: a.tema,
+    celebracao: a.celebracao,
   };
 }

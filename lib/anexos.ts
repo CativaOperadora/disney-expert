@@ -116,6 +116,44 @@ export async function guardarAnexo(
   }
 }
 
+/**
+ * Guarda uma foto de perfil. Mesmas defesas do anexo (tipo pelos bytes,
+ * nome gerado pelo servidor), mas sem vínculo com solicitação: devolve só
+ * o nome do arquivo, que a tabela de usuário guarda.
+ */
+export async function guardarFoto(
+  arquivo: File,
+): Promise<{ ok: true; nome: string } | { ok: false; erro: string }> {
+  if (arquivo.size === 0) return { ok: false, erro: 'Arquivo vazio.' };
+  if (arquivo.size > MAX_BYTES) {
+    return { ok: false, erro: `A foto deve ter no máximo ${LIMITE_MB} MB.` };
+  }
+  const bytes = Buffer.from(await arquivo.arrayBuffer());
+  const tipo = ASSINATURAS.find((a) => a.teste(bytes));
+  if (!tipo) {
+    return { ok: false, erro: 'Envie uma imagem JPG, PNG, GIF ou WEBP.' };
+  }
+  const nome = `perfil-${randomUUID()}.${tipo.ext}`;
+  const dir = diretorio();
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, nome), bytes);
+  return { ok: true, nome };
+}
+
+/** Lê uma foto de perfil pelo nome do arquivo. */
+export async function lerFoto(
+  nome: string,
+): Promise<{ bytes: Buffer; mime: string } | null> {
+  if (!/^perfil-[0-9a-f-]{36}\.[a-z]{3,4}$/i.test(nome)) return null;
+  const ext = nome.split('.').pop()!.toLowerCase();
+  const tipo = ASSINATURAS.find((a) => a.ext === ext);
+  try {
+    return { bytes: await readFile(join(diretorio(), nome)), mime: tipo?.mime ?? 'image/png' };
+  } catch {
+    return null;
+  }
+}
+
 export async function listarAnexos(
   solicitacaoId: string,
   contexto = 'perda',

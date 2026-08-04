@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { STATUS } from '@/lib/sla';
 import type { LinhaSolicitacao } from '@/lib/portal';
+import Comemoracao from './Comemoracao';
 
 /**
  * Kanban do Portal — pipeline PRÓPRIO da agência.
@@ -36,10 +37,12 @@ export default function PortalKanban({
   linhas,
   admin,
   agenteId,
+  celebracao,
 }: {
   linhas: LinhaSolicitacao[];
   admin: boolean;
   agenteId: string;
+  celebracao: boolean;
 }) {
   const router = useRouter();
   const [, iniciarTransicao] = useTransition();
@@ -47,6 +50,7 @@ export default function PortalKanban({
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [festa, setFesta] = useState(false);
 
   const podeMover = (c: LinhaSolicitacao) => admin || c.agente_id === agenteId;
 
@@ -61,6 +65,9 @@ export default function PortalKanban({
         body: JSON.stringify({ status }),
       });
       if (!r.ok) throw new Error();
+      // Comemora só quando a venda fecha de verdade, e só se a pessoa
+      // quiser: a preferência vem da sessão, não de um padrão fixo.
+      if (status === 'venda_finalizada' && celebracao) setFesta(true);
       iniciarTransicao(() => router.refresh());
     } catch {
       setCards(anterior);
@@ -70,6 +77,7 @@ export default function PortalKanban({
 
   return (
     <div className="portal-kanban">
+      <Comemoracao ligada={festa} aoTerminar={() => setFesta(false)} />
       {erro && <div className="erro-caixa">{erro}</div>}
 
       <div className="pk-quadro">

@@ -109,7 +109,12 @@ export default async function PortalHome({
         </form>
 
         {vista === 'kanban' ? (
-          <PortalKanban linhas={linhas} admin={sess.admin} agenteId={sess.agenteId} />
+          <PortalKanban
+            linhas={linhas}
+            admin={sess.admin}
+            agenteId={sess.agenteId}
+            celebracao={sess.celebracao}
+          />
         ) : (
         <div className="portal-tabela-wrap">
           <table className="portal-tabela">

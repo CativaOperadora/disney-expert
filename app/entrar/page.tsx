@@ -9,6 +9,7 @@ import { useState } from 'react';
  * perfil: aqui o acesso é único, por senha compartilhada do painel.
  */
 export default function Entrar() {
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [indo, setIndo] = useState(false);
@@ -20,12 +21,13 @@ export default function Entrar() {
     const r = await fetch('/api/entrar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ senha }),
+      body: JSON.stringify({ email, senha }),
     });
     if (r.ok) {
       window.location.href = '/painel';
     } else {
-      setErro('Senha incorreta.');
+      const d = await r.json().catch(() => ({}));
+      setErro(d?.erro ?? 'E-mail ou senha incorretos.');
       setIndo(false);
     }
   }
@@ -79,13 +81,25 @@ export default function Entrar() {
           {erro && <div className="erro-caixa">{erro}</div>}
 
           <div className="campo">
+            <label className="rotulo" htmlFor="email">E-mail</label>
+            <input
+              id="email"
+              className="entrada"
+              type="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="campo">
             <label className="rotulo" htmlFor="senha">Senha</label>
             <input
               id="senha"
               className="entrada"
               type="password"
               autoComplete="current-password"
-              autoFocus
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required

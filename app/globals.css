@@ -25,6 +25,11 @@
   /* --- superfícies -------------------------------------------------- */
   --fundo: #f6f6f4;
   --superficie: #ffffff;
+  --superficie-2: #fafbfc;   /* hover de linha, faixas alternadas */
+  --campo-fundo: #f7f9fb;    /* interior de input e select */
+  --campo-borda: #dde3e9;
+  --linha-suave: #f2f3f1;    /* divisórias internas de tabela */
+  --sombra: rgba(16, 32, 43, 0.18);
 
   /* --- texto -------------------------------------------------------- */
   --texto: #16202b;
@@ -138,7 +143,7 @@ body {
 .cartao-form {
   width: 100%;
   max-width: 540px;
-  background: #fff;
+  background: var(--superficie);
   color: var(--texto);
   border-radius: 22px;
   padding: 38px 40px 42px;
@@ -217,7 +222,7 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--superficie);
   border: 2px solid #d3d8dd;
   position: relative;
   z-index: 1;
@@ -272,15 +277,15 @@ body {
   font-size: 16px;
   font-family: inherit;
   color: var(--texto);
-  background: #f7f9fb;
-  border: 1px solid #dde3e9;
+  background: var(--campo-fundo);
+  border: 1px solid var(--campo-borda);
   border-radius: 10px;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .entrada:focus {
   outline: none;
-  background: #fff;
+  background: var(--superficie);
   border-color: var(--ceu-vivo);
   box-shadow: 0 0 0 3px rgba(11, 167, 218, 0.15);
 }
@@ -305,8 +310,8 @@ body {
   list-style: none;
   max-height: 240px;
   overflow-y: auto;
-  background: #fff;
-  border: 1px solid #dde3e9;
+  background: var(--superficie);
+  border: 1px solid var(--campo-borda);
   border-radius: 10px;
   box-shadow: 0 10px 28px rgba(22, 32, 43, 0.14);
 }
@@ -330,8 +335,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 13px 15px;
-  background: #f7f9fb;
-  border: 1px solid #dde3e9;
+  background: var(--campo-fundo);
+  border: 1px solid var(--campo-borda);
   border-radius: 10px;
   cursor: pointer;
   text-align: left;
@@ -342,7 +347,7 @@ body {
   transition: border-color 0.15s, background 0.15s;
 }
 
-.opcao:hover { border-color: var(--ceu); background: #fff; }
+.opcao:hover { border-color: var(--ceu); background: var(--superficie); }
 
 .opcao.marcada {
   border-color: var(--ceu-vivo);
@@ -355,7 +360,7 @@ body {
   height: 19px;
   flex-shrink: 0;
   border: 2px solid #cdd4db;
-  background: #fff;
+  background: var(--superficie);
 }
 
 .marca.redonda { border-radius: 50%; }
@@ -402,8 +407,8 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 15px;
-  background: #f7f9fb;
-  border: 1px solid #dde3e9;
+  background: var(--campo-fundo);
+  border: 1px solid var(--campo-borda);
   border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
@@ -465,7 +470,7 @@ body {
 .botao-voltar {
   background: transparent;
   color: var(--texto-medio);
-  border-color: #dde3e9;
+  border-color: var(--campo-borda);
 }
 
 .botao-voltar:hover:not(:disabled) { border-color: var(--marca); color: var(--marca); }
@@ -561,7 +566,7 @@ body {
   gap: 32px;
   padding: 0 24px;
   height: 88px;
-  background: #ffffff;
+  background: var(--superficie);
   /* Fina moldura azul marinho, para o cabeçalho não se perder no branco. */
   border-top: 2px solid var(--marca-escura);
   border-bottom: 3px solid var(--marca-escura);
@@ -1130,7 +1135,7 @@ body {
   align-items: center;
   padding: 0 12px;
   background: #eef1f4;
-  border: 1px solid #dde3e9;
+  border: 1px solid var(--campo-borda);
   border-right: none;
   border-radius: 10px 0 0 10px;
   color: var(--texto-medio);
@@ -1335,7 +1340,7 @@ body {
   padding: 0 8px 8px;
   border-bottom: 1px solid var(--borda);
 }
-.rank-tabela td { padding: 9px 8px; border-bottom: 1px solid #f2f3f1; vertical-align: middle; }
+.rank-tabela td { padding: 9px 8px; border-bottom: 1px solid var(--linha-suave); vertical-align: middle; }
 .rank-tabela tr:last-child td { border-bottom: none; }
 .rank-pos { width: 26px; color: var(--texto-fraco); font-weight: 600; }
 .rank-num { text-align: right; white-space: nowrap; }
@@ -1572,9 +1577,9 @@ body {
   text-transform: uppercase; letter-spacing: 0.03em; padding: 14px 14px; border-bottom: 1px solid var(--borda);
   white-space: nowrap;
 }
-.portal-tabela td { padding: 13px 14px; border-bottom: 1px solid #f2f3f1; vertical-align: middle; }
+.portal-tabela td { padding: 13px 14px; border-bottom: 1px solid var(--linha-suave); vertical-align: middle; }
 .portal-tabela tbody tr:last-child td { border-bottom: none; }
-.portal-tabela tbody tr:hover, .portal-linha:hover { background: #fafbfc; }
+.portal-tabela tbody tr:hover, .portal-linha:hover { background: var(--superficie-2); }
 .col-num { text-align: right; white-space: nowrap; }
 .portal-protocolo {
   font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--marca);
@@ -1801,7 +1806,7 @@ body {
 .link-qr {
   width: 132px;
   flex-shrink: 0;
-  background: #fff;
+  background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: 10px;
   padding: 8px;
@@ -1955,7 +1960,7 @@ body {
   font-weight: 400; font-size: 11.5px; color: var(--texto-fraco);
   text-transform: uppercase; letter-spacing: 0.03em; margin-left: 6px;
 }
-.entrada-arquivo { padding: 10px 12px; font-size: 14px; cursor: pointer; background: #fff; }
+.entrada-arquivo { padding: 10px 12px; font-size: 14px; cursor: pointer; background: var(--superficie); }
 
 .perda-imagens { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .perda-imagens li {
@@ -2014,12 +2019,12 @@ body {
   font-size: 14px; color: var(--texto);
 }
 .sino-lista { list-style: none; margin: 0; padding: 0; max-height: 380px; overflow-y: auto; }
-.sino-lista li { border-bottom: 1px solid #f2f3f1; }
+.sino-lista li { border-bottom: 1px solid var(--linha-suave); }
 .sino-lista li:last-child { border-bottom: none; }
 .sino-lista a, .sino-item-estatico {
   display: flex; gap: 11px; padding: 12px 16px; text-decoration: none; color: inherit;
 }
-.sino-lista a:hover { background: #fafbfc; }
+.sino-lista a:hover { background: var(--superficie-2); }
 .sino-nova { background: var(--marca-fundo); }
 .sino-nova:hover { background: var(--marca-fundo); }
 .sino-icone {
@@ -2027,7 +2032,7 @@ body {
   background: var(--marca-fundo); color: var(--marca);
   display: flex; align-items: center; justify-content: center; font-size: 13px;
 }
-.sino-nova .sino-icone { background: #fff; }
+.sino-nova .sino-icone { background: var(--superficie); }
 .sino-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .sino-titulo { font-size: 13.5px; font-weight: 600; color: var(--texto); }
 .sino-desc {
@@ -2090,3 +2095,200 @@ body {
 .seg-opcao-nome { display: block; font-size: 13.5px; color: var(--texto); font-weight: 500; }
 .seg-opcao-email { display: block; font-size: 12px; color: var(--texto-fraco); }
 .seg-vazio { padding: 14px 10px; font-size: 13px; color: var(--texto-fraco); text-align: center; }
+
+/* =====================================================================
+   TEMA ESCURO
+   Redefine as variaveis, nao as regras. Toda a folha ja consome
+   --superficie, --fundo, --texto, --borda, entao o tema inteiro cabe
+   neste bloco -- e componentes novos nascem compativeis de graca.
+
+   Duas portas de entrada:
+     [data-tema="escuro"]  -> escolha explicita do usuario
+     prefers-color-scheme  -> quando a preferencia e "sistema"
+                              (sem data-tema no <html>)
+   ===================================================================== */
+
+:root[data-tema='escuro'] {
+  --fundo: #12171d;
+  --superficie: #1a2129;
+  --superficie-2: #212a34;
+  --campo-fundo: #212a34;
+  --campo-borda: #33404d;
+
+  --texto: #e8edf2;
+  --texto-medio: #adbac7;
+  --texto-fraco: #8496a6;
+
+  --borda: #2b3540;
+  --borda-forte: #3c4a58;
+  --linha-suave: #232d37;
+
+  --marca: #4aa3e0;
+  --marca-escura: #7cc0ee;
+  --marca-media: #38b6e8;
+  --marca-fundo: #1c2c3a;
+  --marca-linha: #2f4c63;
+
+  --destaque-fundo: #2e2717;
+  --destaque-linha: #4a3f1e;
+  --destaque-escuro: #e0bb4a;
+
+  --sombra: rgba(0, 0, 0, 0.55);
+}
+
+/* Preferencia "sistema": sem data-tema, segue o aparelho. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    --fundo: #12171d;
+    --superficie: #1a2129;
+    --superficie-2: #212a34;
+    --campo-fundo: #212a34;
+    --campo-borda: #33404d;
+
+    --texto: #e8edf2;
+    --texto-medio: #adbac7;
+    --texto-fraco: #8496a6;
+
+    --borda: #2b3540;
+    --borda-forte: #3c4a58;
+    --linha-suave: #232d37;
+
+    --marca: #4aa3e0;
+    --marca-escura: #7cc0ee;
+    --marca-media: #38b6e8;
+    --marca-fundo: #1c2c3a;
+    --marca-linha: #2f4c63;
+
+    --destaque-fundo: #2e2717;
+    --destaque-linha: #4a3f1e;
+    --destaque-escuro: #e0bb4a;
+
+    --sombra: rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* Ajustes que nao saem so de variavel. */
+:root[data-tema='escuro'] .barra,
+:root:not([data-tema='claro']) .barra {
+  background: var(--superficie);
+}
+/* O logotipo oficial e azul sobre branco: no escuro precisa clarear. */
+:root[data-tema='escuro'] .barra-logo { filter: brightness(0) invert(1); opacity: 0.92; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .barra-logo { filter: brightness(0) invert(1); opacity: 0.92; }
+}
+:root[data-tema='escuro'] .status-tag,
+:root[data-tema='escuro'] .leads-optin { filter: brightness(0.92) saturate(1.15); }
+
+/* =====================================================================
+   PREFERENCIAS
+   ===================================================================== */
+
+.pref-salvo {
+  background: #e3f5ec; color: #1a7a52; border: 1px solid #bfe5d3;
+  padding: 10px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 14px;
+}
+:root[data-tema='escuro'] .pref-salvo { background: #163024; color: #6cd3a4; border-color: #22513c; }
+
+.pref-foto-linha { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.pref-foto {
+  width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+  border: 1px solid var(--borda); flex-shrink: 0; display: block;
+}
+.pref-foto-vazia {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--marca); color: #fff; font-size: 22px; font-weight: 700;
+  border: none;
+}
+.pref-foto-acoes { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.pref-botao-arquivo { cursor: pointer; position: relative; overflow: hidden; }
+.pref-botao-arquivo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.pref-temas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.pref-tema { position: relative; }
+.pref-tema input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.pref-tema-face {
+  display: flex; align-items: center; gap: 10px; padding: 12px;
+  border: 1px solid var(--borda); border-radius: 12px;
+  background: var(--superficie); pointer-events: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.pref-tema input:checked + .pref-tema-face {
+  border-color: var(--marca); box-shadow: inset 0 0 0 1px var(--marca);
+}
+.pref-tema-amostra {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  border: 1px solid var(--borda-forte);
+}
+.amostra-claro  { background: linear-gradient(135deg, #ffffff 50%, #f0f2f4 50%); }
+.amostra-escuro { background: linear-gradient(135deg, #1a2129 50%, #12171d 50%); }
+.amostra-sistema{ background: linear-gradient(135deg, #ffffff 50%, #1a2129 50%); }
+.pref-tema-rot { display: block; font-size: 13.5px; font-weight: 600; color: var(--texto); }
+.pref-tema-dica { display: block; font-size: 11.5px; color: var(--texto-fraco); }
+
+.pref-switch { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; }
+.pref-switch input { margin-top: 3px; accent-color: var(--marca); width: 17px; height: 17px; cursor: pointer; }
+.pref-switch strong { display: block; font-size: 14px; color: var(--texto); font-weight: 600; }
+
+.pref-regras { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.pref-regras li { font-size: 12.5px; color: var(--texto-fraco); }
+.pref-regras li.ok { color: #1a7a52; }
+:root[data-tema='escuro'] .pref-regras li.ok { color: #6cd3a4; }
+
+/* =====================================================================
+   COMEMORACAO DE VENDA
+   ===================================================================== */
+
+.festa { position: fixed; inset: 0; pointer-events: none; z-index: 120; overflow: hidden; }
+.festa-papel {
+  position: absolute; top: -12px; width: 9px; height: 15px; border-radius: 2px;
+  animation: festa-cai linear forwards;
+}
+@keyframes festa-cai {
+  0%   { transform: translateY(-10px) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(102vh) rotate(720deg); opacity: 0.15; }
+}
+.festa-aviso {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 16px; padding: 22px 30px; text-align: center;
+  box-shadow: 0 22px 60px var(--sombra); z-index: 121;
+  animation: festa-entra 0.3s ease-out;
+}
+.festa-aviso strong { display: block; font-size: 19px; color: var(--marca-escura); margin-bottom: 3px; }
+.festa-aviso span { font-size: 13.5px; color: var(--texto-medio); }
+@keyframes festa-entra {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.94); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .festa-papel { animation: none; display: none; }
+  .festa-aviso { animation: none; }
+}
+
+/* Avatar no cabecalho, atalho para Preferencias. */
+.portal-usuario-nome { text-decoration: none; gap: 9px; }
+a.portal-usuario-nome:hover { color: var(--marca); }
+.usuario-foto {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+  flex-shrink: 0; display: block; border: 1px solid var(--borda);
+}
+.usuario-foto-vazia {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--marca); color: #fff; font-size: 10.5px; font-weight: 700;
+  border: none;
+}
+
+/* Selos de fundo AMARELO: o texto usa --marca-escura, que no tema escuro
+   clareia e some sobre o amarelo. O fundo continua claro nos dois temas,
+   entao o texto precisa continuar escuro tambem. */
+:root[data-tema='escuro'] .selo,
+:root[data-tema='escuro'] .selo-admin,
+:root[data-tema='escuro'] .leads-recorrente,
+:root[data-tema='escuro'] .portal-nav-link.ativa { color: #16202b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .selo,
+  :root:not([data-tema='claro']) .selo-admin,
+  :root:not([data-tema='claro']) .leads-recorrente,
+  :root:not([data-tema='claro']) .portal-nav-link.ativa { color: #16202b; }
+}

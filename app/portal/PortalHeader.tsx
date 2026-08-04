@@ -30,10 +30,17 @@ export default function PortalHeader({
 
       <div className="portal-usuario">
         <Notificacoes />
-        <span className="portal-usuario-nome">
+        <Link href="/preferencias" className="portal-usuario-nome" title="Preferências">
+          {sess.foto ? (
+            <img className="usuario-foto" src={`/api/foto/${sess.foto}`} alt="" />
+          ) : (
+            <span className="usuario-foto usuario-foto-vazia" aria-hidden="true">
+              {sess.nome.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('')}
+            </span>
+          )}
           {sess.nome}
           {sess.admin && <span className="selo-admin">Admin</span>}
-        </span>
+        </Link>
         <Link href="/api/portal/sair" className="sair" prefetch={false}>Sair</Link>
       </div>
     </header>
