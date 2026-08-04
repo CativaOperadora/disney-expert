@@ -37,6 +37,13 @@ export async function POST(
         return NextResponse.json({ erro: 'Informe o motivo da perda.' }, { status: 422 });
       }
       const motivo = corpo.status === 'venda_perdida' ? corpo.motivo : null;
+      // Detalhamento livre da perda (opcional). Só é gravado junto com a
+      // perda; sair de venda_perdida limpa a descrição, para não sobrar
+      // texto órfão descrevendo algo que deixou de ser verdade.
+      const descricaoPerda =
+        corpo.status === 'venda_perdida'
+          ? String(corpo.descricao ?? '').trim().slice(0, 2000) || null
+          : null;
 
       // Consultora responsável (opcional; enviado ao mover para uma coluna
       // de consultoria). Vazio mantém a atribuição atual.
@@ -72,6 +79,7 @@ export async function POST(
         update solicitacoes
         set status = ${corpo.status}::status_solicitacao,
             motivo_perda = ${motivo}::motivo_perda,
+            descricao_perda = ${descricaoPerda},
             valor_total_venda = ${valorVenda},
             responsavel_id = coalesce(${novoResp}::uuid, responsavel_id),
             status_em = case when status <> ${corpo.status}::status_solicitacao then now() else status_em end,
@@ -92,7 +100,12 @@ export async function POST(
         values (
           ${id}, 'status_alterado',
           ${`De ${antes.status} para ${corpo.status}`},
-          ${sql.json({ de: antes.status, para: corpo.status, motivo })}
+          ${sql.json({
+            de: antes.status,
+            para: corpo.status,
+            motivo,
+            descricao: descricaoPerda,
+          })}
         )
       `;
       return NextResponse.json({ ok: true });

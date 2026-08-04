@@ -91,9 +91,29 @@ export const ROTULO_STATUS: Record<string, string> = Object.fromEntries(
   STATUS.map((s) => [s.id, s.titulo]),
 );
 
+/**
+ * Motivos oferecidos ao especialista ao registrar uma perda.
+ *
+ * Esta lista é a da INTERFACE. O enum motivo_perda no banco ainda contém
+ * os quatro motivos antigos, porque registros gravados os referenciam —
+ * ver migração 009. Para exibir um registro histórico, use ROTULO_MOTIVO,
+ * que conhece os dois conjuntos.
+ */
 export const MOTIVOS_PERDA = [
+  ['preco', 'Desistência relacionada ao preço'],
+  ['outro_roteiro', 'Cliente preferiu outro roteiro'],
+  ['demora_retorno', 'Demora no retorno operacional'],
+] as const;
+
+/** Motivos descontinuados: não aparecem mais na escolha, mas ainda são lidos. */
+const MOTIVOS_HISTORICOS = [
   ['sem_retorno_agencia', 'Sem retorno da agência'],
   ['cliente_desistiu', 'Cliente desistiu'],
   ['perdido_concorrencia', 'Perdido para concorrência'],
   ['fora_de_perfil', 'Fora de perfil'],
 ] as const;
+
+/** Rótulo de qualquer motivo, atual ou histórico. */
+export const ROTULO_MOTIVO: Record<string, string> = Object.fromEntries(
+  [...MOTIVOS_PERDA, ...MOTIVOS_HISTORICOS],
+);

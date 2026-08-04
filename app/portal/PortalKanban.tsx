@@ -60,6 +60,9 @@ export default function PortalKanban({
                         <span className="pk-agente">{c.agente_nome}</span>
                       )}
                     </div>
+                    {c.status === 'venda_perdida' && (
+                      <span className="tag-perdida">Venda Perdida</span>
+                    )}
                     <h3 className="pk-nome">{c.cliente_nome}</h3>
                     <p className="pk-linha">
                       Orlando{c.data_prevista_texto ? ` · ${c.data_prevista_texto}` : ''}

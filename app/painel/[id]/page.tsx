@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
 import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
-import { ROTULO_STATUS, calcularSla } from '@/lib/sla';
+import { ROTULO_STATUS, ROTULO_MOTIVO, calcularSla } from '@/lib/sla';
+import { listarAnexos } from '@/lib/anexos';
 import Acoes from './Acoes';
 
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,8 @@ interface Detalhe {
   cliente_whatsapp: string;
   id_reserva: string | null;
   valor_total_venda: string | null;
+  motivo_perda: string | null;
+  descricao_perda: string | null;
   responsavel_id: string | null;
   respostas: Record<string, any>;
   criado_em: string;
@@ -84,6 +87,7 @@ export default async function PaginaDetalhe({
       s.id, s.protocolo, s.status, s.completude,
       s.cliente_nome, s.cliente_email, s.cliente_whatsapp,
       s.id_reserva, s.valor_total_venda, s.responsavel_id,
+      s.motivo_perda, s.descricao_perda,
       s.respostas, s.criado_em, s.primeiro_atendimento_em,
       ag.sla_horas,
       a.nome  as agente_nome,
@@ -96,6 +100,10 @@ export default async function PaginaDetalhe({
     where s.id = ${id}
   `;
   if (!s) notFound();
+
+  // Imagens do registro da perda. Só busca quando faz sentido.
+  const anexosPerda =
+    s.status === 'venda_perdida' ? await listarAnexos(s.id) : [];
 
   const eventos = await sql<Evento[]>`
     select id, tipo, descricao, criado_em
@@ -147,6 +155,9 @@ export default async function PaginaDetalhe({
           {s.agencia_nome ?? 'Agência não identificada'} ·{' '}
           {ROTULO_STATUS[s.status] ?? s.status}
         </p>
+        {s.status === 'venda_perdida' && (
+          <span className="tag-perdida grande">Venda Perdida</span>
+        )}
         <div className={`sla-detalhe sla-${sla.faixa}`}>
           <span className="sla-texto">{sla.rotulo}</span>
           <span className="sla-prazo">
@@ -155,6 +166,46 @@ export default async function PaginaDetalhe({
           </span>
         </div>
       </header>
+
+      {s.status === 'venda_perdida' && (
+        <section className="caixa caixa-perda">
+          <h2 className="caixa-titulo">Registro da perda</h2>
+          <dl className="portal-dl">
+            <div>
+              <dt>Motivo</dt>
+              <dd>
+                {s.motivo_perda
+                  ? (ROTULO_MOTIVO[s.motivo_perda] ?? s.motivo_perda)
+                  : '—'}
+              </dd>
+            </div>
+          </dl>
+
+          {s.descricao_perda && (
+            <p className="perda-descricao">{s.descricao_perda}</p>
+          )}
+
+          {anexosPerda.length > 0 && (
+            <>
+              <h3 className="perda-subtitulo">
+                {anexosPerda.length}{' '}
+                {anexosPerda.length === 1 ? 'imagem anexada' : 'imagens anexadas'}
+              </h3>
+              <ul className="perda-galeria">
+                {anexosPerda.map((a) => (
+                  <li key={a.id}>
+                    {/* Servido por /api/anexos/[id], que confere a sessão.
+                        Os binários ficam fora de public/ de propósito. */}
+                    <a href={`/api/anexos/${a.id}`} target="_blank" rel="noreferrer">
+                      <img src={`/api/anexos/${a.id}`} alt={a.nome_original} />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="caixa">
         <h2 className="caixa-titulo">Quem atende</h2>

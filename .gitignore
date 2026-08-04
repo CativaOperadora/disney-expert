@@ -15,6 +15,9 @@ out/
 build/
 dist/
 
+# Anexos enviados (em producao ficam num volume Docker)
+uploads/
+
 # Backups do banco
 backups/
 *.sql.gz

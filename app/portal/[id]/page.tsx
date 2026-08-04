@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { sessaoPortal } from '@/lib/portal-auth';
 import { detalheSolicitacao, timelineSolicitacao } from '@/lib/portal';
 import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
-import { MOTIVOS_PERDA } from '@/lib/sla';
+import { ROTULO_MOTIVO } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
 import CamposVenda from './CamposVenda';
 
@@ -17,7 +17,9 @@ const DATAHORA = new Intl.DateTimeFormat('pt-BR', {
 const reais = (v: string | null) =>
   v == null ? '—' : `R$ ${Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d),)/g, '.')}`;
 
-const MOTIVO: Record<string, string> = Object.fromEntries(MOTIVOS_PERDA.map(([v, r]) => [v, r]));
+// ROTULO_MOTIVO conhece também os motivos descontinuados, para registros
+// antigos não exibirem o valor cru do enum.
+const MOTIVO = ROTULO_MOTIVO;
 
 function formatar(valor: any): string {
   if (Array.isArray(valor)) return valor.join(', ');

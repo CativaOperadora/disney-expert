@@ -1893,3 +1893,82 @@ body {
   .leads-barra-acoes { justify-content: space-between; }
   .leads-check-filtro { width: 100%; justify-content: flex-start; }
 }
+
+/* =====================================================================
+   VENDA PERDIDA · tag e registro detalhado
+   ===================================================================== */
+
+/* Vermelho solido, nao a versao suave de .status-venda_perdida: a perda
+   precisa saltar em qualquer lugar onde o ticket apareca. */
+.tag-perdida {
+  display: inline-block;
+  background: #c0392b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 5px;
+  margin: 2px 0 6px;
+  white-space: nowrap;
+}
+.tag-perdida.grande {
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.caixa-perda { border-left: 3px solid #c0392b; }
+.perda-descricao {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  background: #fbf4f3;
+  border: 1px solid #f0d9d6;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--texto-medio);
+  white-space: pre-wrap;   /* preserva as quebras que a especialista digitou */
+}
+.perda-subtitulo {
+  font-size: 12px; font-weight: 600; color: var(--texto-fraco);
+  text-transform: uppercase; letter-spacing: 0.03em; margin: 18px 0 10px;
+}
+.perda-galeria {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+}
+.perda-galeria img {
+  width: 100%; height: 92px; object-fit: cover;
+  border-radius: 9px; border: 1px solid var(--borda); display: block;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.perda-galeria a:hover img { transform: scale(1.03); border-color: var(--marca); }
+
+/* --- modal de registro da perda --- */
+.modal-perda { max-width: 520px; text-align: left; }
+.modal-perda .campo { margin-bottom: 18px; }
+.modal-perda textarea.entrada { resize: vertical; min-height: 76px; font-size: 15px; }
+.rotulo-opcional {
+  font-weight: 400; font-size: 11.5px; color: var(--texto-fraco);
+  text-transform: uppercase; letter-spacing: 0.03em; margin-left: 6px;
+}
+.entrada-arquivo { padding: 10px 12px; font-size: 14px; cursor: pointer; background: #fff; }
+
+.perda-imagens { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.perda-imagens li {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--borda); border-radius: 9px; padding: 6px 10px 6px 6px;
+}
+.perda-imagens img { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.perda-imagem-nome {
+  flex: 1; font-size: 13px; color: var(--texto-medio);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.perda-imagem-remover {
+  background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1;
+  color: var(--texto-fraco); padding: 0 4px; flex-shrink: 0;
+}
+.perda-imagem-remover:hover { color: #c0392b; }

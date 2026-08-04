@@ -50,18 +50,38 @@ fi
 
 echo "[$(date '+%F %T')] backup gerado: $ARQUIVO (${TAMANHO} bytes)"
 
+# --- anexos ----------------------------------------------------------
+# As imagens anexadas às solicitações vivem em um volume, NÃO no banco.
+# Sem isto, o pg_dump restauraria os metadados apontando para arquivos que
+# não existem mais: a linha do tempo mostraria imagens quebradas.
+ANEXOS="$DESTINO/anexos_${CARIMBO}.tar.gz"
+if docker compose exec -T app sh -c 'test -d /dados/anexos' 2>/dev/null; then
+  docker compose exec -T app tar -czf - -C /dados anexos > "$ANEXOS" 2>/dev/null
+  if [ -s "$ANEXOS" ]; then
+    echo "[$(date '+%F %T')] anexos: $ANEXOS ($(stat -c%s "$ANEXOS") bytes)"
+  else
+    rm -f "$ANEXOS"
+    ANEXOS=""
+    echo "AVISO: nao consegui empacotar os anexos." >&2
+  fi
+else
+  ANEXOS=""
+fi
+
 # --- cópia remota ----------------------------------------------------
 # Backup que mora no mesmo servidor do banco não é backup. Se o VPS for
 # perdido, os dois somem juntos.
 if [ -n "${RCLONE_DESTINO:-}" ]; then
   rclone copy "$ARQUIVO" "$RCLONE_DESTINO" --no-traverse
+  [ -n "$ANEXOS" ] && rclone copy "$ANEXOS" "$RCLONE_DESTINO" --no-traverse
   echo "[$(date '+%F %T')] cópia remota concluída"
 else
   echo "AVISO: RCLONE_DESTINO vazio. O backup existe apenas neste servidor." >&2
 fi
 
 # --- limpeza ---------------------------------------------------------
-find "$DESTINO" -name 'disney_*.sql.gz' -mtime "+$RETENCAO_DIAS" -delete
+find "$DESTINO" -name 'disney_*.sql.gz'  -mtime "+$RETENCAO_DIAS" -delete
+find "$DESTINO" -name 'anexos_*.tar.gz'  -mtime "+$RETENCAO_DIAS" -delete
 
 # --- aviso de vida ---------------------------------------------------
 if [ -n "${URL_MONITOR_BACKUP:-}" ]; then

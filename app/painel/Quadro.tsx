@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { calcularSla, MOTIVOS_PERDA } from '@/lib/sla';
+import { MAX_ARQUIVOS, LIMITE_MB, ACCEPT_ARQUIVO } from '@/lib/anexos-limites';
 
 export interface Cartao {
   id: string;
@@ -56,8 +57,32 @@ export default function Quadro({
   // Modal de motivo da perda: guarda o cartão a mover e a coluna destino.
   const [perda, setPerda] = useState<{ id: string; col: Coluna } | null>(null);
   const [motivo, setMotivo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  // Os arquivos ficam aqui e só sobem na confirmação. Enviar antes deixaria
+  // imagens órfãs no volume toda vez que alguém cancelasse o modal.
+  const [imagens, setImagens] = useState<File[]>([]);
+  const [enviando, setEnviando] = useState(false);
 
-  async function mover(id: string, col: Coluna, motivoPerda?: string) {
+  /** Sobe as imagens escolhidas. Devolve erro na primeira que falhar. */
+  async function enviarImagens(id: string, arquivos: File[]): Promise<string | null> {
+    for (const arquivo of arquivos) {
+      const dados = new FormData();
+      dados.append('arquivo', arquivo);
+      const r = await fetch(`/api/painel/${id}/anexos`, { method: 'POST', body: dados });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        return d?.erro ?? `Não foi possível enviar "${arquivo.name}".`;
+      }
+    }
+    return null;
+  }
+
+  async function mover(
+    id: string,
+    col: Coluna,
+    motivoPerda?: string,
+    descricaoPerda?: string,
+  ) {
     const anterior = cartoes;
     setCartoes((c) =>
       c.map((x) =>
@@ -78,7 +103,10 @@ export default function Quadro({
 
     const corpo: any = { acao: 'status', status: col.status };
     if (col.consultoraId) corpo.responsavel = col.consultoraId;
-    if (col.status === 'venda_perdida') corpo.motivo = motivoPerda;
+    if (col.status === 'venda_perdida') {
+      corpo.motivo = motivoPerda;
+      corpo.descricao = descricaoPerda ?? '';
+    }
 
     try {
       const r = await fetch(`/api/painel/${id}`, {
@@ -100,6 +128,8 @@ export default function Quadro({
     if (col.status === 'venda_perdida') {
       // Abre o modal obrigatório de motivo antes de concluir a movimentação.
       setMotivo('');
+      setDescricao('');
+      setImagens([]);
       setPerda({ id, col });
     } else {
       mover(id, col);
@@ -178,6 +208,12 @@ export default function Quadro({
                         )}
                       </div>
 
+                      {/* Acompanha o cartão em qualquer visualização, para a
+                          perda não passar despercebida fora da coluna. */}
+                      {c.status === 'venda_perdida' && (
+                        <span className="tag-perdida">Venda Perdida</span>
+                      )}
+
                       <h3 className="ficha-nome">
                         {c.agente_nome ?? 'Agente não identificado'}
                       </h3>
@@ -220,36 +256,115 @@ export default function Quadro({
 
       {/* Modal obrigatório de motivo da perda */}
       {perda && (
-        <div className="modal-fundo" onClick={() => setPerda(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titulo">Motivo da perda</h3>
+        <div className="modal-fundo" onClick={() => !enviando && setPerda(null)}>
+          <div className="modal modal-perda" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-titulo">Registrar venda perdida</h3>
             <p className="modal-texto">
-              Selecione o motivo para mover esta solicitação para <strong>Venda perdida</strong>.
-              É obrigatório.
+              O motivo é obrigatório. A descrição e as imagens são opcionais e
+              ficam no histórico da solicitação.
             </p>
-            <select
-              className="entrada"
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-            >
-              <option value="">Selecione um motivo…</option>
-              {MOTIVOS_PERDA.map(([v, r]) => (
-                <option key={v} value={v}>{r}</option>
-              ))}
-            </select>
+
+            <div className="campo">
+              <label className="rotulo" htmlFor="motivo-perda">Motivo da perda</label>
+              <select
+                id="motivo-perda"
+                className="entrada"
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+              >
+                <option value="">Selecione um motivo…</option>
+                {MOTIVOS_PERDA.map(([v, r]) => (
+                  <option key={v} value={v}>{r}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="campo">
+              <label className="rotulo" htmlFor="descricao-perda">
+                Descrição <span className="rotulo-opcional">opcional</span>
+              </label>
+              <textarea
+                id="descricao-perda"
+                className="entrada"
+                rows={3}
+                maxLength={2000}
+                placeholder="Detalhe o que aconteceu, se ajudar a entender a perda."
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+              />
+            </div>
+
+            <div className="campo">
+              <label className="rotulo" htmlFor="imagens-perda">
+                Imagens <span className="rotulo-opcional">opcional</span>
+              </label>
+              <span className="ajuda">
+                Até {MAX_ARQUIVOS} imagens, {LIMITE_MB} MB cada. JPG, PNG, GIF ou WEBP.
+              </span>
+              <input
+                id="imagens-perda"
+                className="entrada entrada-arquivo"
+                type="file"
+                accept={ACCEPT_ARQUIVO}
+                multiple
+                onChange={(e) => {
+                  const novos = Array.from(e.target.files ?? []);
+                  setImagens((atual) => [...atual, ...novos].slice(0, MAX_ARQUIVOS));
+                  e.target.value = '';
+                }}
+              />
+
+              {imagens.length > 0 && (
+                <ul className="perda-imagens">
+                  {imagens.map((img, i) => (
+                    <li key={`${img.name}-${i}`}>
+                      {/* Prévia local: o arquivo ainda não subiu. */}
+                      <img src={URL.createObjectURL(img)} alt="" />
+                      <span className="perda-imagem-nome">{img.name}</span>
+                      <button
+                        type="button"
+                        className="perda-imagem-remover"
+                        aria-label={`Remover ${img.name}`}
+                        onClick={() => setImagens((a) => a.filter((_, k) => k !== i))}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <div className="modal-acoes">
-              <button className="botao botao-voltar" onClick={() => setPerda(null)}>
+              <button
+                className="botao botao-voltar"
+                disabled={enviando}
+                onClick={() => setPerda(null)}
+              >
                 Cancelar
               </button>
               <button
                 className="botao botao-principal"
-                disabled={!motivo}
-                onClick={() => {
-                  mover(perda.id, perda.col, motivo);
+                disabled={!motivo || enviando}
+                onClick={async () => {
+                  const alvo = perda;
+                  setEnviando(true);
+                  setErro(null);
+                  // As imagens sobem primeiro: se alguma falhar, o cartão
+                  // não se move e o especialista corrige sem perder o texto.
+                  const falha = imagens.length
+                    ? await enviarImagens(alvo.id, imagens)
+                    : null;
+                  setEnviando(false);
+                  if (falha) {
+                    setErro(falha);
+                    return;
+                  }
                   setPerda(null);
+                  mover(alvo.id, alvo.col, motivo, descricao);
                 }}
               >
-                Confirmar perda
+                {enviando ? 'Enviando…' : 'Confirmar perda'}
               </button>
             </div>
           </div>
