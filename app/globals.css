@@ -2431,3 +2431,45 @@ a.portal-usuario-nome:hover { color: var(--marca); }
      Em tela estreita o max-width em vw deixa quebrar naturalmente. */
   max-width: min(420px, 80vw);
 }
+
+/* --- Painel de marca centralizado (login do Portal) ---
+   Logotipo, chamada e beneficios como UM bloco no centro vertical.
+   O .login-arte usa space-between para tres pedacos soltos; aqui ha um
+   filho so, entao centralizar e o que faz sentido. */
+.login-arte-centrado { justify-content: center; }
+.login-arte-bloco {
+  position: relative;
+  display: flex; flex-direction: column;
+  max-width: 470px;
+  width: 100%;
+}
+.login-arte-centrado .login-arte-logo {
+  width: 268px; max-width: 62%;
+  /* Sobe a lista: o PNG tem area transparente na base (o rastro de
+     particulas), entao a distancia visual e maior que a medida. */
+  margin-bottom: -18px;
+}
+.login-arte-chamada {
+  margin: 0 0 26px;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+  color: #fff;
+}
+
+/* Itens agora tem duas linhas: o tique alinha pelo TOPO, nao pelo meio,
+   senao ele flutua no meio do paragrafo. */
+.login-arte-centrado .login-arte-lista { gap: 15px; }
+.login-arte-centrado .login-arte-lista li {
+  align-items: flex-start;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.86);
+}
+.login-arte-centrado .login-arte-lista svg { margin-top: 3px; }
+
+@media (max-height: 700px) {
+  /* Tela baixa: encolhe para a lista nao encostar nas bordas. */
+  .login-arte-centrado .login-arte-logo { width: 210px; margin-bottom: -14px; }
+  .login-arte-chamada { font-size: 18px; margin-bottom: 20px; }
+}

@@ -53,9 +53,9 @@ const PERFIS: {
 ];
 
 const VANTAGENS = [
-  'Kanban das solicitações em tempo real',
-  'Dashboard de faturamento e conversão',
-  'Base de leads pronta para exportar',
+  'Seu cliente preenche o formulário e a solicitação cai direto na sua central',
+  'Acompanhe cada vendedor da sua equipe, etapa por etapa, através do Painel',
+  'Tenha em mãos Indicadores de vendas e faturamento da sua agência, sempre atualizados',
 ];
 
 export default function Entrar() {
@@ -99,34 +99,35 @@ export default function Entrar() {
 
   return (
     <div className="login-tela">
-      <aside className="login-arte" aria-hidden="true">
-        <img
-          className="login-arte-logo"
-          src="/logo-orlando-expert-branco.png"
-          alt=""
-        />
+      {/* Logotipo, chamada e benefícios formam UM bloco centralizado, em
+          vez de três pedaços empurrados para topo, meio e base. É a mesma
+          ideia do login da consultoria — aqui com a lista, porque o
+          público é externo e precisa saber o que ganha. */}
+      <aside className="login-arte login-arte-centrado" aria-hidden="true">
+        <div className="login-arte-bloco">
+          <img
+            className="login-arte-logo"
+            src="/logo-orlando-expert-branco.png"
+            alt=""
+          />
 
-        <div className="login-arte-centro">
-          <h2 className="login-arte-frase">
-            Do primeiro contato à <em>venda fechada</em>, em um só lugar.
-          </h2>
-          <p className="login-arte-texto">
-            O portal da sua agência para acompanhar cada solicitação enviada
-            à consultoria Orlando Expert.
+          <p className="login-arte-chamada">
+            O portal da sua agência para acompanhar as solicitações de
+            viagens à Orlando
           </p>
-        </div>
 
-        <ul className="login-arte-lista">
-          {VANTAGENS.map((v) => (
-            <li key={v}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              {v}
-            </li>
-          ))}
-        </ul>
+          <ul className="login-arte-lista">
+            {VANTAGENS.map((v) => (
+              <li key={v}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>{v}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </aside>
 
       <div className="login-painel">
