@@ -96,6 +96,11 @@ export async function processarFila(): Promise<{ enviados: number; falhas: numbe
       const dados = await carregarDados(p.solicitacao_id);
       if (!dados) throw new Error('Solicitação não encontrada');
 
+      // `aviso_especialista` (novo, um por especialista) e
+      // `copia_especialista` (antigo, endereço único do .env) compartilham
+      // o mesmo corpo: o que mudou foi a quem se endereça, não o que se
+      // conta. O tipo antigo segue tratado porque pode haver envio pendente
+      // dele na fila no momento da atualização.
       const base =
         p.tipo === 'briefing_agente'
           ? briefingAgente(dados)

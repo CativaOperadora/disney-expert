@@ -9,7 +9,7 @@ import {
 } from '@/lib/perguntas';
 import { processarFila } from '@/lib/fila';
 import { criarCards } from '@/lib/cards';
-import { notificar } from '@/lib/notificacoes';
+import { notificar, notificarEspecialistas } from '@/lib/notificacoes';
 
 export const runtime = 'nodejs';
 
@@ -144,6 +144,16 @@ export async function POST(req: NextRequest) {
       `${criada.protocolo} · ${col.cliente_nome}`,
     ).catch((e) => console.error('[solicitacoes] notificar', e));
 
+    // E avisa a consultoria. Vai para TODAS as especialistas ativas: o card
+    // nasce sem responsável (`criarCards`), então não há "a responsável" a
+    // quem endereçar — quem pegar assume.
+    await notificarEspecialistas(
+      criada.id,
+      'solicitacao_nova_interna',
+      'Nova solicitação para atender',
+      `${criada.protocolo} · ${col.cliente_nome} · ${agente.agencia_nome}`,
+    ).catch((e) => console.error('[solicitacoes] notificar especialistas', e));
+
     await sql`
       insert into eventos (solicitacao_id, tipo, descricao, payload)
       values (
@@ -164,11 +174,30 @@ export async function POST(req: NextRequest) {
     await sql`
       insert into envios_email (solicitacao_id, tipo, destinatario, idempotency_key)
       values
-        (${criada.id}, 'briefing_agente',    ${agente.agente_email},                  ${criada.id + ':briefing_agente'}),
-        (${criada.id}, 'confirmacao_cliente', ${col.cliente_email},                    ${criada.id + ':confirmacao_cliente'}),
-        (${criada.id}, 'copia_especialista',  ${process.env.EMAIL_ESPECIALISTA ?? ''}, ${criada.id + ':copia_especialista'})
+        (${criada.id}, 'briefing_agente',    ${agente.agente_email}, ${criada.id + ':briefing_agente'}),
+        (${criada.id}, 'confirmacao_cliente', ${col.cliente_email},  ${criada.id + ':confirmacao_cliente'})
       on conflict (idempotency_key) do nothing
     `;
+
+    // Aviso da consultoria: UMA linha por especialista ativa, com o
+    // endereço vindo de `usuarios`. Substitui a cópia única que ia para o
+    // EMAIL_ESPECIALISTA do .env — endereço genérico não diz a ninguém que
+    // a solicitação é sua para atender.
+    //
+    // A chave de idempotência leva o id da pessoa: sem isso as duas linhas
+    // colidiriam entre si e só a primeira entraria.
+    //
+    // Fora do insert acima de propósito: uma especialista sem e-mail, ou
+    // nenhuma cadastrada, não pode impedir a confirmação do cliente. O
+    // catch segue o mesmo padrão do `notificar` acima.
+    await sql`
+      insert into envios_email (solicitacao_id, tipo, destinatario, idempotency_key)
+      select ${criada.id}, 'aviso_especialista', u.email,
+             ${criada.id + ':aviso_especialista:'} || u.id::text
+      from usuarios u
+      where u.papel = 'especialista' and u.ativo and u.email <> ''
+      on conflict (idempotency_key) do nothing
+    `.catch((e) => console.error('[solicitacoes] aviso especialistas', e));
 
     // Dispara a fila sem segurar a resposta. O cliente já pode ver a tela
     // de conclusão: o dado está salvo e o envio acontece em seguida.

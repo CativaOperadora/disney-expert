@@ -119,7 +119,8 @@ desenvolvimento, num `.env.local` na raiz.
 | `APP_URL` | sim | URL pública (usada em links dos e-mails). |
 | `FILA_SEGREDO` | recomendada | Autentica o disparo da fila de e-mails via cron. |
 | `EMAIL_API_KEY` | opcional | Chave da Resend. Sem ela, os e-mails não saem (o dado é gravado mesmo assim). |
-| `EMAIL_REMETENTE` / `EMAIL_RESPOSTA` / `EMAIL_ESPECIALISTA` | opcional | Remetente, reply-to e cópia interna. |
+| `EMAIL_REMETENTE` / `EMAIL_RESPOSTA` | opcional | Remetente e reply-to. |
+| `EMAIL_ESPECIALISTA` | sem uso | Era a cópia interna, num endereço único. Desde a migração 016 o aviso de solicitação nova vai para cada especialista ativa, no endereço de `usuarios`. Pode remover do `.env`. |
 | `EMAIL_TESTE` | opcional | Se preenchida, TODA mensagem vai para este endereço. |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Docker | Usadas pelo `docker-compose` para criar o banco e a `DATABASE_URL`. |
 

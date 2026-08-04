@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { sessaoPainel } from '@/lib/auth';
+import Notificacoes from './Notificacoes';
 import MenuUsuario, { ICONE_PERFIL } from '../MenuUsuario';
 
 /**
@@ -42,6 +43,12 @@ export default async function PainelHeader({
       </nav>
 
       <div className="portal-usuario">
+        {/*
+          Só para quem tem usuário próprio. A sessão de emergência (senha
+          compartilhada) não tem caixa a que endereçar aviso, então o sino
+          apareceria sempre zerado — ruído, e uma promessa que não se cumpre.
+        */}
+        {sess?.usuarioId && <Notificacoes />}
         <MenuUsuario
           nome={sess?.nome ?? 'Equipe Cativa'}
           foto={sess?.foto ?? null}
