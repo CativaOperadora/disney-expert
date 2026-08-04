@@ -1,6 +1,7 @@
 import { sql } from './db';
 import { STATUS } from './sla';
 import { formatarBRL } from './valores';
+import { juntarCard, atualizarCampoCard } from './cards';
 import type { SessaoPortal } from './portal-auth';
 
 /**
@@ -38,6 +39,8 @@ export interface LinhaSolicitacao {
   data_prevista_texto: string | null;
   total_pessoas: number | null;
   valor_total_venda: string | null;
+  /** Dono do card. O agente só arrasta o que é dele; o admin, todos. */
+  agente_id: string | null;
   agente_nome: string | null;
   consultora_nome: string | null;
   criado_em: string;
@@ -49,15 +52,20 @@ export async function listarSolicitacoes(
 ): Promise<LinhaSolicitacao[]> {
   const busca = f.busca?.trim();
   const linhas = await sql<Omit<LinhaSolicitacao, 'status_rotulo'>[]>`
-    select s.id, s.protocolo, s.status, s.cliente_nome, s.data_prevista_texto,
-           s.total_pessoas, s.valor_total_venda, a.nome as agente_nome,
+    select s.id, s.protocolo, c.status, s.cliente_nome, s.data_prevista_texto,
+           s.total_pessoas, c.valor_total_venda,
+           s.agente_id, a.nome as agente_nome,
            u.nome as consultora_nome, s.criado_em
     from solicitacoes s
+    ${juntarCard('agencia')}
     left join agentes a on a.id = s.agente_id
-    left join usuarios u on u.id = s.responsavel_id
+    -- Quem é a consultora da Cativa neste atendimento: é um CONTATO, não
+    -- o estágio dela. Vem do card da consultoria só para esse nome.
+    left join cards cc on cc.solicitacao_id = s.id and cc.lado = 'consultoria'
+    left join usuarios u on u.id = cc.responsavel_id
     where ${escopo(sess)}
-      and s.status <> 'duplicada'
-      ${f.status ? sql`and s.status = ${f.status}::status_solicitacao` : sql``}
+      and c.status <> 'duplicada'
+      ${f.status ? sql`and c.status = ${f.status}::status_solicitacao` : sql``}
       ${busca ? sql`and (s.cliente_nome ilike ${'%' + busca + '%'} or s.protocolo ilike ${'%' + busca + '%'})` : sql``}
       ${f.de ? sql`and s.criado_em >= ${f.de}::date` : sql``}
       ${f.ate ? sql`and s.criado_em < (${f.ate}::date + 1)` : sql``}
@@ -95,12 +103,13 @@ export async function detalheSolicitacao(
 ): Promise<DetalhePortal | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const [s] = await sql<Omit<DetalhePortal, 'status_rotulo'>[]>`
-    select s.id, s.protocolo, s.status, s.cliente_nome, s.cliente_email,
+    select s.id, s.protocolo, c.status, s.cliente_nome, s.cliente_email,
            s.cliente_whatsapp, s.data_prevista_texto, s.total_pessoas,
-           s.total_criancas, s.origem_embarque, s.valor_total_venda,
-           s.id_reserva, s.venda_em, s.motivo_perda,
+           s.total_criancas, s.origem_embarque, c.valor_total_venda,
+           c.id_reserva, c.venda_em, c.motivo_perda,
            a.nome as agente_nome, s.respostas, s.criado_em
     from solicitacoes s
+    ${juntarCard('agencia')}
     left join agentes a on a.id = s.agente_id
     where s.id = ${id} and ${escopo(sess)}
     limit 1
@@ -180,8 +189,9 @@ export async function timelineSolicitacao(id: string): Promise<EventoPortal[]> {
  * fora do escopo não atualiza nada e devolve false (indistinguível de
  * inexistente, do ponto de vista do portal).
  *
- * NÃO altera `status` nem `venda_em`: a etapa do atendimento continua sendo
- * exclusividade do CRM interno da consultoria.
+ * Escreve SEMPRE no card lado='agencia'. O valor da consultoria fica no
+ * card dela e não é tocado — divergir é o comportamento esperado, já que
+ * a agência ajusta a própria comissão.
  */
 export async function atualizarVendaPortal(
   sess: SessaoPortal,
@@ -191,16 +201,14 @@ export async function atualizarVendaPortal(
 ): Promise<boolean> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return false;
 
-  const upd =
-    campo === 'valor_total_venda'
-      ? await sql`
-          update solicitacoes s set valor_total_venda = ${valor as number | null}
-          where s.id = ${id} and ${escopo(sess)} and s.status <> 'duplicada'`
-      : await sql`
-          update solicitacoes s set id_reserva = ${valor as string | null}
-          where s.id = ${id} and ${escopo(sess)} and s.status <> 'duplicada'`;
+  // O escopo da sessão é conferido na solicitação; a escrita vai no card.
+  const [permitido] = await sql<{ id: string }[]>`
+    select s.id from solicitacoes s
+    where s.id = ${id} and ${escopo(sess)}
+    limit 1`;
+  if (!permitido) return false;
 
-  if (upd.count === 0) return false;
+  if (!(await atualizarCampoCard(id, 'agencia', campo, valor))) return false;
 
   // Rastro na linha do tempo: o número alimenta o faturamento do BI, então
   // quem mudou e para quanto precisa ficar registrado.

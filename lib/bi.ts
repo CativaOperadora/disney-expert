@@ -1,6 +1,7 @@
 import { sql } from './db';
 import { STATUS } from './sla';
 import { buscarPergunta } from './perguntas';
+import type { Lado } from './cards';
 
 /**
  * Camada de dados do módulo de BI.
@@ -28,6 +29,16 @@ export interface Filtros {
   cidade: string | null;
   parque: string | null;
   granularidade: 'dia' | 'semana' | 'mes' | 'ano';
+  /**
+   * De qual pipeline sair os números.
+   *
+   * Este módulo serve DOIS dashboards: o BI interno da Cativa e o do
+   * Portal da agência. Cada um soma o próprio card — a agência ajusta a
+   * comissão dela, então os totais divergem por natureza. Errar este
+   * campo faz um lado ver o faturamento do outro, que é justamente o que
+   * a separação existe para impedir.
+   */
+  lado: Lado;
 }
 
 export const FILTROS_VAZIOS: Filtros = {
@@ -40,7 +51,12 @@ export const FILTROS_VAZIOS: Filtros = {
   cidade: null,
   parque: null,
   granularidade: 'mes',
+  lado: 'consultoria',
 };
+
+/** Junta o card do lado pedido nos filtros. */
+const cardDe = (f: Filtros) =>
+  sql`join cards c on c.solicitacao_id = s.id and c.lado = ${f.lado}::lado_card`;
 
 const GRAN_PG: Record<Filtros['granularidade'], string> = {
   dia: 'day',
@@ -54,7 +70,7 @@ function dim(f: Filtros) {
   return sql`
     ${f.agencia ? sql`and s.agencia_id = ${f.agencia}` : sql``}
     ${f.agente ? sql`and s.agente_id = ${f.agente}` : sql``}
-    ${f.consultora ? sql`and s.responsavel_id = ${f.consultora}` : sql``}
+    ${f.consultora ? sql`and c.responsavel_id = ${f.consultora}` : sql``}
     ${f.cidade ? sql`and s.origem_embarque = ${f.cidade}` : sql``}
     ${f.parque ? sql`and s.parques @> array[${f.parque}]::text[]` : sql``}
   `;
@@ -63,7 +79,7 @@ function dim(f: Filtros) {
 /** Recorte de status, aplicado só às métricas de solicitação. */
 function statusDim(f: Filtros) {
   return f.status
-    ? sql`and s.status = ${f.status}::status_solicitacao`
+    ? sql`and c.status = ${f.status}::status_solicitacao`
     : sql``;
 }
 
@@ -100,13 +116,15 @@ async function kpis(
   const [rec, cons, ven] = await Promise.all([
     sql<{ n: number }[]>`
       select count(*)::int n from solicitacoes s
+      ${cardDe(f)}
       where true ${periodo(sql`s.criado_em`, de, ate)} ${dim(f)} ${statusDim(f)}`,
     sql<{ n: number; seg: number | null }[]>`
       select count(*)::int n,
-             avg(extract(epoch from (s.primeiro_atendimento_em - s.criado_em))) seg
+             avg(extract(epoch from (c.primeiro_atendimento_em - s.criado_em))) seg
       from solicitacoes s
-      where s.primeiro_atendimento_em is not null
-        ${periodo(sql`s.primeiro_atendimento_em`, de, ate)} ${dim(f)}`,
+      ${cardDe(f)}
+      where c.primeiro_atendimento_em is not null
+        ${periodo(sql`c.primeiro_atendimento_em`, de, ate)} ${dim(f)}`,
     sql<
       {
         n: number;
@@ -117,13 +135,14 @@ async function kpis(
       }[]
     >`
       select count(*)::int n,
-             coalesce(sum(s.valor_total_venda), 0) valor,
+             coalesce(sum(c.valor_total_venda), 0) valor,
              coalesce(sum(s.total_pessoas), 0)::int pax,
-             avg(extract(epoch from (s.venda_em - s.primeiro_atendimento_em))) seg_cv,
-             avg(extract(epoch from (s.venda_em - s.criado_em))) seg_total
+             avg(extract(epoch from (c.venda_em - c.primeiro_atendimento_em))) seg_cv,
+             avg(extract(epoch from (c.venda_em - s.criado_em))) seg_total
       from solicitacoes s
-      where s.status = 'venda_finalizada' and s.venda_em is not null
-        ${periodo(sql`s.venda_em`, de, ate)} ${dim(f)}`,
+      ${cardDe(f)}
+      where c.status = 'venda_finalizada' and c.venda_em is not null
+        ${periodo(sql`c.venda_em`, de, ate)} ${dim(f)}`,
   ]);
 
   const solicitacoes = rec[0].n;
@@ -176,14 +195,16 @@ async function evolucao(f: Filtros): Promise<PontoTempo[]> {
     sql<{ bucket: string; n: number }[]>`
       select to_char(date_trunc(${g}, s.criado_em), 'YYYY-MM-DD') bucket, count(*)::int n
       from solicitacoes s
+      ${cardDe(f)}
       where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)} ${statusDim(f)}
       group by 1 order by 1`,
     sql<{ bucket: string; n: number; valor: string }[]>`
-      select to_char(date_trunc(${g}, s.venda_em), 'YYYY-MM-DD') bucket,
-             count(*)::int n, coalesce(sum(s.valor_total_venda), 0) valor
+      select to_char(date_trunc(${g}, c.venda_em), 'YYYY-MM-DD') bucket,
+             count(*)::int n, coalesce(sum(c.valor_total_venda), 0) valor
       from solicitacoes s
-      where s.status = 'venda_finalizada' and s.venda_em is not null
-        ${periodo(sql`s.venda_em`, f.de, f.ate)} ${dim(f)}
+      ${cardDe(f)}
+      where c.status = 'venda_finalizada' and c.venda_em is not null
+        ${periodo(sql`c.venda_em`, f.de, f.ate)} ${dim(f)}
       group by 1 order by 1`,
   ]);
 
@@ -217,28 +238,36 @@ export interface ItemRanking {
 async function rankings(f: Filtros) {
   const [agencias, agentes, consAtend, consVendas] = await Promise.all([
     sql<{ id: string; rotulo: string; n: number; valor: string }[]>`
-      select ag.id, ag.nome rotulo, count(*)::int n, coalesce(sum(s.valor_total_venda),0) valor
-      from solicitacoes s join agencias ag on ag.id = s.agencia_id
-      where s.status = 'venda_finalizada' and s.venda_em is not null
-        ${periodo(sql`s.venda_em`, f.de, f.ate)} ${dim(f)}
+      select ag.id, ag.nome rotulo, count(*)::int n, coalesce(sum(c.valor_total_venda),0) valor
+      from solicitacoes s
+      ${cardDe(f)}
+      join agencias ag on ag.id = s.agencia_id
+      where c.status = 'venda_finalizada' and c.venda_em is not null
+        ${periodo(sql`c.venda_em`, f.de, f.ate)} ${dim(f)}
       group by ag.id, ag.nome order by valor desc, n desc limit 10`,
     sql<{ id: string; rotulo: string; sub: string; n: number }[]>`
       select a.id, a.nome rotulo, coalesce(ag.nome,'—') sub, count(*)::int n
-      from solicitacoes s join agentes a on a.id = s.agente_id
+      from solicitacoes s
+      ${cardDe(f)}
+      join agentes a on a.id = s.agente_id
       left join agencias ag on ag.id = s.agencia_id
       where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)} ${statusDim(f)}
       group by a.id, a.nome, ag.nome order by n desc limit 10`,
     sql<{ id: string; rotulo: string; n: number }[]>`
       select u.id, u.nome rotulo, count(*)::int n
-      from solicitacoes s join usuarios u on u.id = s.responsavel_id
-      where s.primeiro_atendimento_em is not null
-        ${periodo(sql`s.primeiro_atendimento_em`, f.de, f.ate)} ${dim(f)}
+      from solicitacoes s
+      ${cardDe(f)}
+      join usuarios u on u.id = c.responsavel_id
+      where c.primeiro_atendimento_em is not null
+        ${periodo(sql`c.primeiro_atendimento_em`, f.de, f.ate)} ${dim(f)}
       group by u.id, u.nome order by n desc limit 10`,
     sql<{ id: string; rotulo: string; n: number; valor: string }[]>`
-      select u.id, u.nome rotulo, count(*)::int n, coalesce(sum(s.valor_total_venda),0) valor
-      from solicitacoes s join usuarios u on u.id = s.responsavel_id
-      where s.status = 'venda_finalizada' and s.venda_em is not null
-        ${periodo(sql`s.venda_em`, f.de, f.ate)} ${dim(f)}
+      select u.id, u.nome rotulo, count(*)::int n, coalesce(sum(c.valor_total_venda),0) valor
+      from solicitacoes s
+      ${cardDe(f)}
+      join usuarios u on u.id = c.responsavel_id
+      where c.status = 'venda_finalizada' and c.venda_em is not null
+        ${periodo(sql`c.venda_em`, f.de, f.ate)} ${dim(f)}
       group by u.id, u.nome order by valor desc, n desc limit 10`,
   ]);
 
@@ -263,6 +292,7 @@ async function distribuicaoJson(f: Filtros, chave: string): Promise<Fatia[]> {
   return sql<Fatia[]>`
     select s.respostas->>${chave} rotulo, count(*)::int n
     from solicitacoes s
+      ${cardDe(f)}
     where s.respostas->>${chave} is not null and s.respostas->>${chave} <> ''
       ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)} ${statusDim(f)}
     group by 1 order by n desc`;
@@ -281,12 +311,15 @@ async function distribuicoes(f: Filtros) {
   ] = await Promise.all([
     sql<Fatia[]>`
       select p rotulo, count(*)::int n
-      from solicitacoes s, unnest(s.parques) p
+      from solicitacoes s
+      ${cardDe(f)},
+           unnest(s.parques) p
       where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)} ${statusDim(f)}
       group by p order by n desc limit 12`,
     sql<Fatia[]>`
       select s.origem_embarque rotulo, count(*)::int n
       from solicitacoes s
+      ${cardDe(f)}
       where s.origem_embarque is not null and s.origem_embarque <> ''
         ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)} ${statusDim(f)}
       group by 1 order by n desc limit 12`,
@@ -296,10 +329,11 @@ async function distribuicoes(f: Filtros) {
     distribuicaoJson(f, 'primeira_viagem'),
     distribuicaoJson(f, 'locomocao'),
     sql<{ status: string; n: number }[]>`
-      select s.status, count(*)::int n
+      select c.status, count(*)::int n
       from solicitacoes s
+      ${cardDe(f)}
       where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)}
-      group by s.status`,
+      group by c.status`,
   ]);
 
   const rotuloStatus: Record<string, string> = Object.fromEntries(
@@ -343,10 +377,12 @@ export async function desempenhoPorAgente(f: Filtros): Promise<DesempenhoAgente[
   >`
     select a.id, a.nome,
            count(s.id)::int as solicitacoes,
-           count(s.id) filter (where s.status = 'venda_finalizada')::int as vendas,
-           coalesce(sum(s.valor_total_venda) filter (where s.status = 'venda_finalizada'), 0) as faturamento
+           count(s.id) filter (where c.status = 'venda_finalizada')::int as vendas,
+           coalesce(sum(c.valor_total_venda) filter (where c.status = 'venda_finalizada'), 0) as faturamento
     from agentes a
-    join solicitacoes s on s.agente_id = a.id and s.status <> 'duplicada'
+    join solicitacoes s on s.agente_id = a.id
+    ${cardDe(f)}
+      and c.status <> 'duplicada'
     where true ${periodo(sql`s.criado_em`, f.de, f.ate)} ${dim(f)}
     group by a.id, a.nome
     order by faturamento desc, solicitacoes desc

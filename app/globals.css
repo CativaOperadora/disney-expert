@@ -1972,3 +1972,11 @@ body {
   color: var(--texto-fraco); padding: 0 4px; flex-shrink: 0;
 }
 .perda-imagem-remover:hover { color: #c0392b; }
+
+/* --- Kanban do portal: pipeline proprio, arrastavel --- */
+.pk-coluna.alvo { background: var(--marca-fundo); border-color: var(--marca); }
+.pk-card { cursor: grab; }
+.pk-card:active { cursor: grabbing; }
+.pk-card.movendo { opacity: 0.45; }
+/* Card de outro agente: o admin move, o agente comum so abre. */
+.pk-card-fixo { cursor: pointer; }

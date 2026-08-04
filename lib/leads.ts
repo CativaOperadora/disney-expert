@@ -1,6 +1,7 @@
 import { sql } from './db';
 import { STATUS } from './sla';
 import { escopo } from './portal';
+import { juntarCard } from './cards';
 import type { SessaoPortal } from './portal-auth';
 
 /**
@@ -76,20 +77,21 @@ export async function listarLeads(
                                            order by s.criado_em desc))[1]  as parques,
       (array_agg(s.primeira_viagem         order by s.criado_em desc))[1]  as primeira_viagem,
       (array_agg(s.total_pessoas           order by s.criado_em desc))[1]  as total_pessoas,
-      (array_agg(s.status::text            order by s.criado_em desc))[1]  as ultimo_status,
+      (array_agg(c.status::text            order by s.criado_em desc))[1]  as ultimo_status,
       (array_agg(a.nome                    order by s.criado_em desc))[1]  as agente_nome,
       count(*)::int                                                        as solicitacoes,
-      count(*) filter (where s.status = 'venda_finalizada')::int           as vendas,
-      coalesce(sum(s.valor_total_venda)
-               filter (where s.status = 'venda_finalizada'), 0)            as faturamento,
+      count(*) filter (where c.status = 'venda_finalizada')::int           as vendas,
+      coalesce(sum(c.valor_total_venda)
+               filter (where c.status = 'venda_finalizada'), 0)            as faturamento,
       bool_or(s.aceite_marketing)                                          as marketing,
       max(s.aceite_marketing_em)                                           as marketing_em,
       min(s.criado_em)                                                     as primeiro_em,
       max(s.criado_em)                                                     as ultimo_em
     from solicitacoes s
+    ${juntarCard('agencia')}
     left join agentes a on a.id = s.agente_id
     where ${escopo(sess)}
-      and s.status <> 'duplicada'
+      and c.status <> 'duplicada'
       and s.cliente_email is not null
       ${f.de ? sql`and s.criado_em >= ${f.de}::date` : sql``}
       ${f.ate ? sql`and s.criado_em < (${f.ate}::date + 1)` : sql``}
@@ -102,7 +104,7 @@ export async function listarLeads(
     having true
       ${f.somenteMarketing ? sql`and bool_or(s.aceite_marketing)` : sql``}
       ${f.status
-        ? sql`and (array_agg(s.status::text order by s.criado_em desc))[1] = ${f.status}`
+        ? sql`and (array_agg(c.status::text order by s.criado_em desc))[1] = ${f.status}`
         : sql``}
     order by max(s.criado_em) desc
     limit ${limite}

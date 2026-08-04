@@ -4,6 +4,7 @@ import { sql } from '@/lib/db';
 import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
 import { ROTULO_STATUS, ROTULO_MOTIVO, calcularSla } from '@/lib/sla';
 import { listarAnexos } from '@/lib/anexos';
+import { juntarCard } from '@/lib/cards';
 import Acoes from './Acoes';
 
 export const dynamic = 'force-dynamic';
@@ -82,19 +83,22 @@ export default async function PaginaDetalhe({
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
+  // Ficha do lado CONSULTORIA. Status, valor, reserva e motivo vêm do
+  // card da Cativa — o que a agência registrou fica no card dela.
   const [s] = await sql<Detalhe[]>`
     select
-      s.id, s.protocolo, s.status, s.completude,
+      s.id, s.protocolo, c.status, s.completude,
       s.cliente_nome, s.cliente_email, s.cliente_whatsapp,
-      s.id_reserva, s.valor_total_venda, s.responsavel_id,
-      s.motivo_perda, s.descricao_perda,
-      s.respostas, s.criado_em, s.primeiro_atendimento_em,
+      c.id_reserva, c.valor_total_venda, c.responsavel_id,
+      c.motivo_perda, c.descricao_perda,
+      s.respostas, s.criado_em, c.primeiro_atendimento_em,
       ag.sla_horas,
       a.nome  as agente_nome,
       a.email as agente_email,
       ag.nome as agencia_nome,
       ag.tier as agencia_tier
     from solicitacoes s
+    ${juntarCard('consultoria')}
     left join agentes  a  on a.id  = s.agente_id
     left join agencias ag on ag.id = s.agencia_id
     where s.id = ${id}

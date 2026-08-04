@@ -3,6 +3,9 @@ import { sql } from '@/lib/db';
 import { sessaoValida } from '@/lib/auth';
 import { STATUS, MOTIVOS_PERDA } from '@/lib/sla';
 import { paraReais } from '@/lib/valores';
+import {
+  buscarCard, moverCard, atualizarCampoCard, atribuirResponsavel,
+} from '@/lib/cards';
 
 export const runtime = 'nodejs';
 
@@ -51,9 +54,9 @@ export async function POST(
         ? corpo.responsavel
         : null;
 
-      const [antes] = await sql<{ status: string; valor_total_venda: string | null }[]>`
-        select status, valor_total_venda from solicitacoes where id = ${id}
-      `;
+      // Estado do lado CONSULTORIA. O card da agência é outro registro e
+      // não é tocado aqui — os pipelines são independentes.
+      const antes = await buscarCard(id, 'consultoria');
       if (!antes) {
         return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
       }
@@ -75,25 +78,15 @@ export async function POST(
 
       // Sair de "nova_solicitacao" liga o relógio do SLA; entrar em
       // "venda_finalizada" carimba a data da venda (base do faturamento).
-      await sql`
-        update solicitacoes
-        set status = ${corpo.status}::status_solicitacao,
-            motivo_perda = ${motivo}::motivo_perda,
-            descricao_perda = ${descricaoPerda},
-            valor_total_venda = ${valorVenda},
-            responsavel_id = coalesce(${novoResp}::uuid, responsavel_id),
-            status_em = case when status <> ${corpo.status}::status_solicitacao then now() else status_em end,
-            primeiro_atendimento_em = case
-              when ${corpo.status} <> 'nova_solicitacao'
-               and primeiro_atendimento_em is null then now()
-              else primeiro_atendimento_em
-            end,
-            venda_em = case
-              when ${corpo.status} = 'venda_finalizada' and venda_em is null then now()
-              else venda_em
-            end
-        where id = ${id}
-      `;
+      // Os dois relógios são do lado consultoria: o que a agência faz no
+      // pipeline dela não interfere no SLA da Cativa.
+      await moverCard(id, 'consultoria', {
+        status: corpo.status,
+        motivo,
+        descricao: descricaoPerda,
+        responsavel: novoResp,
+        valor: valorVenda,
+      });
 
       await sql`
         insert into eventos (solicitacao_id, tipo, descricao, payload)
@@ -127,9 +120,7 @@ export async function POST(
       // Campo interno da especialista. Texto simples, editável a qualquer
       // momento; vazio limpa o valor.
       const valor = String(corpo.valor ?? '').trim().slice(0, 120);
-      await sql`
-        update solicitacoes set id_reserva = ${valor || null} where id = ${id}
-      `;
+      await atualizarCampoCard(id, 'consultoria', 'id_reserva', valor || null);
       return NextResponse.json({ ok: true });
     }
 
@@ -141,9 +132,7 @@ export async function POST(
       if (bruto !== '' && valor === null) {
         return NextResponse.json({ erro: 'Valor inválido.' }, { status: 400 });
       }
-      await sql`
-        update solicitacoes set valor_total_venda = ${valor} where id = ${id}
-      `;
+      await atualizarCampoCard(id, 'consultoria', 'valor_total_venda', valor);
       return NextResponse.json({ ok: true });
     }
 
@@ -154,9 +143,7 @@ export async function POST(
       if (valor !== '' && !/^[0-9a-f-]{36}$/i.test(valor)) {
         return NextResponse.json({ erro: 'Responsável inválido.' }, { status: 400 });
       }
-      await sql`
-        update solicitacoes set responsavel_id = ${valor || null} where id = ${id}
-      `;
+      await atribuirResponsavel(id, valor || null);
       return NextResponse.json({ ok: true });
     }
 

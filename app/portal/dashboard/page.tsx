@@ -45,6 +45,9 @@ export default async function PortalDashboard({
   // ISOLAMENTO: o recorte de agência/agente vem SEMPRE da sessão.
   const filtros: Filtros = {
     ...FILTROS_VAZIOS,
+    // Números do pipeline DA AGÊNCIA. Divergir do BI da Cativa é
+    // esperado: a agência ajusta a própria comissão.
+    lado: 'agencia',
     de: data(sp.de),
     ate: data(sp.ate),
     status: texto(sp.status),

@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import { sql } from '@/lib/db';
+import { juntarCard } from '@/lib/cards';
 import Quadro, { type Cartao, type Coluna } from './Quadro';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Painel() {
+  // Quadro da CONSULTORIA: status e responsável saem do card deste lado.
+  // O pipeline da agência é outro registro e não aparece aqui.
   const cartoes = await sql<Cartao[]>`
     select
-      s.id, s.protocolo, s.status, s.completude, s.responsavel_id,
+      s.id, s.protocolo, c.status, s.completude, c.responsavel_id,
       s.data_prevista_texto, s.total_pessoas, s.total_criancas,
-      s.criado_em, s.primeiro_atendimento_em,
+      s.criado_em, c.primeiro_atendimento_em,
       ag.nome      as agencia_nome,
       ag.tier      as agencia_tier,
       ag.sla_horas as sla_horas,
@@ -19,9 +22,10 @@ export default async function Painel() {
         where e.solicitacao_id = s.id and e.status in ('bounce', 'falha')
       ) as email_falhou
     from solicitacoes s
+    ${juntarCard('consultoria')}
     left join agentes  a  on a.id  = s.agente_id
     left join agencias ag on ag.id = s.agencia_id
-    where s.status <> 'duplicada'
+    where c.status <> 'duplicada'
     order by s.criado_em desc
     limit 600
   `;

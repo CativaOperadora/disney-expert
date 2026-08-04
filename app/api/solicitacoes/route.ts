@@ -8,6 +8,7 @@ import {
   calcularCompletude,
 } from '@/lib/perguntas';
 import { processarFila } from '@/lib/fila';
+import { criarCards } from '@/lib/cards';
 
 export const runtime = 'nodejs';
 
@@ -128,6 +129,10 @@ export async function POST(req: NextRequest) {
       )
       returning id, protocolo
     `;
+
+    // Os dois pipelines nascem juntos: consultoria e agência, cada um em
+    // "Nova solicitação". A partir daqui evoluem de forma independente.
+    await criarCards(criada.id);
 
     await sql`
       insert into eventos (solicitacao_id, tipo, descricao, payload)

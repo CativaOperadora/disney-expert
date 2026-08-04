@@ -30,25 +30,38 @@ interface Pendente {
 }
 
 /**
- * Encerramento automático: toda solicitação que ficou 2 dias completos em
- * Venda Finalizada ou Venda Perdida vai para "Concluídas", mantendo o
- * Kanban limpo. Roda junto com o processamento da fila (cron).
+ * Encerramento automático: um card que ficou 2 dias completos em Venda
+ * Finalizada ou Venda Perdida vai para "Concluídas", mantendo o Kanban
+ * limpo. Roda junto com o processamento da fila (cron).
+ *
+ * Age por CARD, não por solicitação: os dois pipelines têm relógios
+ * próprios. O card da consultoria pode encerrar enquanto o da agência
+ * ainda está em negociação — e é exatamente esse o comportamento
+ * desejado, já que cada lado controla o seu.
+ *
+ * O evento só é registrado para o lado consultoria: no lado da agência
+ * ele apareceria na linha do tempo dela como movimentação, e a agência
+ * só deve ver o que ela mesma registrou.
  */
 export async function encerrarAntigas(): Promise<number> {
-  const res = await sql`
-    with movidas as (
-      update solicitacoes
-      set status = 'concluida', status_em = now()
-      where status in ('venda_finalizada', 'venda_perdida')
-        and status_em < now() - interval '2 days'
-      returning id
-    )
-    insert into eventos (solicitacao_id, tipo, descricao)
-    select id, 'status_alterado', 'Encerrada automaticamente (2 dias em venda finalizada/perdida)'
-    from movidas
-    returning solicitacao_id
+  const movidas = await sql<{ solicitacao_id: string; lado: string }[]>`
+    update cards
+    set status = 'concluida', status_em = now()
+    where status in ('venda_finalizada', 'venda_perdida')
+      and status_em < now() - interval '2 days'
+    returning solicitacao_id, lado::text
   `;
-  return res.count;
+
+  const daConsultoria = movidas.filter((m) => m.lado === 'consultoria');
+  if (daConsultoria.length > 0) {
+    await sql`
+      insert into eventos (solicitacao_id, tipo, descricao)
+      select id, 'status_alterado',
+             'Encerrada automaticamente (2 dias em venda finalizada/perdida)'
+      from unnest(${daConsultoria.map((m) => m.solicitacao_id)}::uuid[]) as id
+    `;
+  }
+  return movidas.length;
 }
 
 export async function processarFila(): Promise<{ enviados: number; falhas: number }> {
