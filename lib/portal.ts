@@ -116,12 +116,38 @@ export interface EventoPortal {
   criado_em: string;
 }
 
+/**
+ * Eventos que a agência pode ver.
+ *
+ * `comentario` está FORA desta lista de propósito. As anotações da
+ * consultoria são internas da Cativa — chegam a tratar de margem,
+ * negociação e perfil da própria agência. Elas nunca podem sair daqui.
+ *
+ * A regra vale nos dois sentidos: quando a agência ganhar anotações
+ * próprias (Fase 2), elas também não devem alcançar o CRM interno. Por
+ * isso o corte é por tipo de evento, e não por um filtro de texto — não
+ * existe caminho em que um comentário atravesse a fronteira.
+ */
 const EVENTO_VISIVEL: Record<string, string> = {
+  // A solicitação chegando: é o lead da própria agência, não uma ação da
+  // consultoria. Único evento de origem externa que ela enxerga.
   criada: 'Solicitação recebida',
-  status_alterado: 'Situação atualizada',
-  comentario: 'Atualização da consultoria',
-  consultoria_registrada: 'Consultoria registrada',
+  // Rastro das ações da PRÓPRIA agência. Tipo próprio justamente para
+  // nunca se confundir com as anotações internas da consultoria.
+  venda_agencia: 'Dados da venda atualizados',
 };
+
+/**
+ * Fora da lista, deliberadamente:
+ *
+ *   comentario ............. anotação interna da consultoria
+ *   status_alterado ........ mudança de etapa feita pela especialista
+ *   consultoria_registrada . andamento interno da consultoria
+ *
+ * A agência só acompanha o que ela mesma registrou. O andamento interno
+ * da Cativa não é visível para ela — e o mesmo valerá no sentido oposto
+ * quando a agência tiver anotações e etapas próprias (Fase 2).
+ */
 
 /** Timeline curada para o agente. Só chame após validar o acesso ao id. */
 export async function timelineSolicitacao(id: string): Promise<EventoPortal[]> {
@@ -133,13 +159,15 @@ export async function timelineSolicitacao(id: string): Promise<EventoPortal[]> {
     where solicitacao_id = ${id} and tipo = any(${Object.keys(EVENTO_VISIVEL)})
     order by criado_em asc
   `;
-  return eventos.map((e) => {
-    let rotulo = EVENTO_VISIVEL[e.tipo] ?? e.tipo;
-    if (e.tipo === 'status_alterado' && e.payload?.para) {
-      rotulo = `Situação: ${ROTULO_STATUS[e.payload.para] ?? e.payload.para}`;
-    }
-    return { tipo: e.tipo, rotulo, descricao: e.descricao, criado_em: e.criado_em };
-  });
+  // Sem tratamento especial por tipo: o rótulo vem só de EVENTO_VISIVEL.
+  // Derivar texto do payload seria mais uma porta por onde detalhe interno
+  // poderia escapar — o corte tem que ser o mais burro possível.
+  return eventos.map((e) => ({
+    tipo: e.tipo,
+    rotulo: EVENTO_VISIVEL[e.tipo] ?? e.tipo,
+    descricao: e.descricao,
+    criado_em: e.criado_em,
+  }));
 }
 
 // ======================================================= edição dos dados de venda
@@ -185,7 +213,7 @@ export async function atualizarVendaPortal(
 
   await sql`
     insert into eventos (solicitacao_id, tipo, descricao, payload)
-    values (${id}, 'comentario', ${descricao},
+    values (${id}, 'venda_agencia', ${descricao},
             ${sql.json({ origem: 'portal', campo, agente_id: sess.agenteId })})
   `;
   return true;

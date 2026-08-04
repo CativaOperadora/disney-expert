@@ -156,7 +156,12 @@ export default async function PortalDetalhe({
                     <div>
                       <span className="tl-quando">{DATAHORA.format(new Date(e.criado_em))}</span>
                       <span className="tl-rotulo">{e.rotulo}</span>
-                      {e.descricao && e.tipo === 'comentario' && <p className="tl-desc">{e.descricao}</p>}
+                      {/* Só o registro que a própria agência gerou exibe
+                          texto. Anotação da consultoria é interna e nem
+                          chega aqui — ver EVENTO_VISIVEL em lib/portal.ts. */}
+                      {e.descricao && e.tipo === 'venda_agencia' && (
+                        <p className="tl-desc">{e.descricao}</p>
+                      )}
                     </div>
                   </li>
                 ))}
