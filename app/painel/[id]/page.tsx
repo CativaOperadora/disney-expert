@@ -109,9 +109,14 @@ export default async function PaginaDetalhe({
   const anexosPerda =
     s.status === 'venda_perdida' ? await listarAnexos(s.id) : [];
 
+  // A linha do tempo do CRM exclui 'nota_agencia' e 'venda_agencia': são
+  // registros internos da agência. A fronteira vale nos dois sentidos —
+  // assim como a agência não lê as anotações da consultoria.
   const eventos = await sql<Evento[]>`
     select id, tipo, descricao, criado_em
-    from eventos where solicitacao_id = ${id}
+    from eventos
+    where solicitacao_id = ${id}
+      and tipo not in ('nota_agencia', 'venda_agencia')
     order by criado_em desc
   `;
 

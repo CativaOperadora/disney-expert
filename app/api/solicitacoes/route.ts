@@ -9,6 +9,7 @@ import {
 } from '@/lib/perguntas';
 import { processarFila } from '@/lib/fila';
 import { criarCards } from '@/lib/cards';
+import { notificar } from '@/lib/notificacoes';
 
 export const runtime = 'nodejs';
 
@@ -133,6 +134,15 @@ export async function POST(req: NextRequest) {
     // Os dois pipelines nascem juntos: consultoria e agência, cada um em
     // "Nova solicitação". A partir daqui evoluem de forma independente.
     await criarCards(criada.id);
+
+    // Notifica a agência do lead que acabou de chegar. É evento DELA —
+    // nada aqui vem do lado da consultoria.
+    await notificar(
+      criada.id,
+      'solicitacao_nova',
+      'Nova solicitação recebida',
+      `${criada.protocolo} · ${col.cliente_nome}`,
+    ).catch((e) => console.error('[solicitacoes] notificar', e));
 
     await sql`
       insert into eventos (solicitacao_id, tipo, descricao, payload)

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { SessaoPortal } from '@/lib/portal-auth';
+import Notificacoes from './Notificacoes';
 
 export default function PortalHeader({
   sess,
@@ -28,6 +29,7 @@ export default function PortalHeader({
       </nav>
 
       <div className="portal-usuario">
+        <Notificacoes />
         <span className="portal-usuario-nome">
           {sess.nome}
           {sess.admin && <span className="selo-admin">Admin</span>}

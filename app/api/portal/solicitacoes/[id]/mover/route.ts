@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sessaoPortal } from '@/lib/portal-auth';
 import { moverCardAgencia } from '@/lib/cards';
 import { STATUS } from '@/lib/sla';
+import { notificar } from '@/lib/notificacoes';
 
 export const runtime = 'nodejs';
 
@@ -38,6 +39,20 @@ export async function POST(
     // aplicado dentro de moverCardAgencia, a partir da sessão.
     const ok = await moverCardAgencia(sess, id, status);
     if (!ok) return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
+
+    // Avisa o resto da agência: dono, administradores e seguidores. Quem
+    // moveu não recebe aviso do que acabou de fazer.
+    const rotulo = STATUS.find((s) => s.id === status)?.titulo ?? status;
+    await notificar(
+      id,
+      status === 'venda_finalizada' ? 'venda_finalizada' : 'card_movido',
+      status === 'venda_finalizada'
+        ? 'Venda finalizada'
+        : `Card movido para ${rotulo}`,
+      `${sess.nome} · ${rotulo}`,
+      sess.agenteId,
+    ).catch((e) => console.error('[portal/mover] notificar', e));
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error('[portal/mover]', e);

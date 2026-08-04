@@ -67,15 +67,20 @@ export default function CamposVenda({
 
       {!ganha && (
         <p className="portal-nota" style={{ marginBottom: 18 }}>
-          Atendimento em andamento. O valor registrado aqui entra no faturamento
-          e no ticket médio do dashboard quando a consultoria concluir a venda.
+          O valor registrado aqui é o <strong>da sua agência</strong> e entra no
+          faturamento e no ticket médio do seu dashboard quando você mover este
+          card para <em>Venda finalizada</em>. Ele é independente do que a
+          consultoria registra.
         </p>
       )}
 
       {/* --- Valor total da venda --- */}
       <div className="campo">
         <label className="rotulo" htmlFor="valor_venda">Valor total da venda</label>
-        <span className="ajuda">Base dos indicadores financeiros do seu dashboard.</span>
+        <span className="ajuda">
+          Base dos indicadores do seu dashboard. Pode divergir do valor da
+          consultoria — a comissão da agência é sua.
+        </span>
         <div className="entrada-prefixo">
           <span className="prefixo">R$</span>
           <input

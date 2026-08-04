@@ -6,6 +6,8 @@ import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
 import { ROTULO_MOTIVO } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
 import CamposVenda from './CamposVenda';
+import Seguidores from './Seguidores';
+import NotaAgencia from './NotaAgencia';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,6 +148,9 @@ export default async function PortalDetalhe({
               )}
             </section>
 
+            <Seguidores id={s.id} />
+            <NotaAgencia id={s.id} />
+
             {/* Timeline */}
             <section className="cartao-bi">
               <h3 className="cartao-bi-titulo">Linha do tempo</h3>
@@ -159,9 +164,10 @@ export default async function PortalDetalhe({
                       {/* Só o registro que a própria agência gerou exibe
                           texto. Anotação da consultoria é interna e nem
                           chega aqui — ver EVENTO_VISIVEL em lib/portal.ts. */}
-                      {e.descricao && e.tipo === 'venda_agencia' && (
-                        <p className="tl-desc">{e.descricao}</p>
-                      )}
+                      {e.descricao &&
+                        (e.tipo === 'venda_agencia' || e.tipo === 'nota_agencia') && (
+                          <p className="tl-desc">{e.descricao}</p>
+                        )}
                     </div>
                   </li>
                 ))}

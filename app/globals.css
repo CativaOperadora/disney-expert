@@ -1980,3 +1980,113 @@ body {
 .pk-card.movendo { opacity: 0.45; }
 /* Card de outro agente: o admin move, o agente comum so abre. */
 .pk-card-fixo { cursor: pointer; }
+
+/* =====================================================================
+   NOTIFICACOES · sino, painel e toast
+   ===================================================================== */
+
+.sino-caixa { position: relative; display: flex; align-items: center; }
+.sino {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 9px;
+  background: none; border: 1px solid transparent; cursor: pointer;
+  color: var(--texto-medio); transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.sino:hover { background: var(--fundo); color: var(--marca); border-color: var(--borda); }
+.sino.com-aviso { color: var(--marca); }
+.sino-contador {
+  position: absolute; top: 1px; right: 0;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  background: #c0392b; color: #fff; border: 2px solid #fff;
+  border-radius: 20px; font-size: 10px; font-weight: 700; line-height: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.sino-painel {
+  position: absolute; top: 44px; right: 0; z-index: 60;
+  width: 360px; max-width: calc(100vw - 32px);
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 14px; box-shadow: 0 18px 46px rgba(16,32,43,0.18);
+  overflow: hidden;
+}
+.sino-painel-topo {
+  padding: 13px 16px; border-bottom: 1px solid var(--borda);
+  font-size: 14px; color: var(--texto);
+}
+.sino-lista { list-style: none; margin: 0; padding: 0; max-height: 380px; overflow-y: auto; }
+.sino-lista li { border-bottom: 1px solid #f2f3f1; }
+.sino-lista li:last-child { border-bottom: none; }
+.sino-lista a, .sino-item-estatico {
+  display: flex; gap: 11px; padding: 12px 16px; text-decoration: none; color: inherit;
+}
+.sino-lista a:hover { background: #fafbfc; }
+.sino-nova { background: var(--marca-fundo); }
+.sino-nova:hover { background: var(--marca-fundo); }
+.sino-icone {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--marca-fundo); color: var(--marca);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.sino-nova .sino-icone { background: #fff; }
+.sino-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sino-titulo { font-size: 13.5px; font-weight: 600; color: var(--texto); }
+.sino-desc {
+  font-size: 12.5px; color: var(--texto-medio);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sino-quando { font-size: 11.5px; color: var(--texto-fraco); }
+.sino-vazio { padding: 26px 16px; text-align: center; font-size: 13px; color: var(--texto-fraco); }
+
+/* Toast discreto no canto superior direito. */
+.toast {
+  position: fixed; top: 100px; right: 22px; z-index: 90;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--texto); color: #fff;
+  padding: 12px 16px; border-radius: 11px; font-size: 13.5px;
+  box-shadow: 0 14px 34px rgba(16,32,43,0.28);
+  animation: toast-entra 0.22s ease-out;
+}
+.toast-ponto {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--destaque); flex-shrink: 0;
+}
+@keyframes toast-entra {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* =====================================================================
+   SEGUIDORES
+   ===================================================================== */
+
+.seg-lista { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.seg-lista li { display: flex; align-items: center; gap: 10px; }
+.seg-avatar {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--marca); color: #fff;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: center;
+}
+.seg-nome { flex: 1; font-size: 13.5px; color: var(--texto); display: flex; align-items: center; gap: 7px; }
+.seg-remover {
+  background: none; border: none; cursor: pointer; font-size: 19px; line-height: 1;
+  color: var(--texto-fraco); padding: 0 4px;
+}
+.seg-remover:hover { color: #c0392b; }
+
+.seg-seletor { position: relative; }
+.seg-opcoes {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 40;
+  list-style: none; margin: 0; padding: 4px;
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 11px; box-shadow: 0 14px 32px rgba(16,32,43,0.16);
+  max-height: 240px; overflow-y: auto;
+}
+.seg-opcoes button {
+  width: 100%; display: flex; align-items: center; gap: 10px; text-align: left;
+  background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 8px;
+}
+.seg-opcoes button:hover { background: var(--marca-fundo); }
+.seg-opcao-nome { display: block; font-size: 13.5px; color: var(--texto); font-weight: 500; }
+.seg-opcao-email { display: block; font-size: 12px; color: var(--texto-fraco); }
+.seg-vazio { padding: 14px 10px; font-size: 13px; color: var(--texto-fraco); text-align: center; }

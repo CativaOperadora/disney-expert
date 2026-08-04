@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessaoPortal } from '@/lib/portal-auth';
-import { atualizarVendaPortal } from '@/lib/portal';
+import { atualizarVendaPortal, escopo } from '@/lib/portal';
 import { paraReais } from '@/lib/valores';
+import { notificar } from '@/lib/notificacoes';
+import { sql } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -47,6 +49,35 @@ export async function POST(
       const valor = String(corpo.valor ?? '').trim().slice(0, 120);
       const ok = await atualizarVendaPortal(sess, id, 'id_reserva', valor || null);
       if (!ok) return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (corpo.acao === 'nota') {
+      // Anotação INTERNA da agência. Espelha o "Registrar anotação" da
+      // consultoria e obedece à mesma fronteira, no sentido oposto: o
+      // tipo 'nota_agencia' não está na lista de eventos que o CRM
+      // interno exibe, então a especialista nunca a lê.
+      const texto = String(corpo.texto ?? '').trim().slice(0, 4000);
+      if (texto.length < 2) {
+        return NextResponse.json({ erro: 'Anotação vazia.' }, { status: 400 });
+      }
+      const [permitido] = await sql<{ id: string }[]>`
+        select s.id from solicitacoes s
+        where s.id = ${id} and ${escopo(sess)} limit 1`;
+      if (!permitido) {
+        return NextResponse.json({ erro: 'Não encontrada.' }, { status: 404 });
+      }
+
+      await sql`
+        insert into eventos (solicitacao_id, tipo, descricao, payload)
+        values (${id}, 'nota_agencia', ${`${sess.nome}: ${texto}`},
+                ${sql.json({ origem: 'portal', agente_id: sess.agenteId })})
+      `;
+      await notificar(
+        id, 'nota_agencia', 'Nova anotação da equipe',
+        `${sess.nome}: ${texto.slice(0, 120)}`, sess.agenteId,
+      ).catch((e) => console.error('[portal/nota] notificar', e));
+
       return NextResponse.json({ ok: true });
     }
 

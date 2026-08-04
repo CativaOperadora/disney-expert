@@ -13,10 +13,31 @@ import type { SessaoPortal } from './portal-auth';
  * via sessão. É o que garante o isolamento multi-tenant.
  */
 
+/**
+ * O portão do isolamento multi-tenant.
+ *
+ * Admin  -> toda a agência.
+ * Agente -> o que ele captou, MAIS o que ele segue.
+ *
+ * A cláusula de seguidor está sempre casada com `s.agencia_id`: seguir só
+ * é possível dentro da própria organização (ver lib/seguidores.ts), e a
+ * verificação é repetida aqui em vez de confiar na gravação. Se um
+ * registro de seguidor entrasse errado por qualquer via, ele ainda assim
+ * não abriria acesso a outra agência.
+ */
 export function escopo(sess: SessaoPortal) {
   return sess.admin
     ? sql`s.agencia_id = ${sess.agenciaId}`
-    : sql`s.agente_id = ${sess.agenteId}`;
+    : sql`(
+        s.agente_id = ${sess.agenteId}
+        or (
+          s.agencia_id = ${sess.agenciaId}
+          and exists (
+            select 1 from seguidores g
+            where g.solicitacao_id = s.id and g.agente_id = ${sess.agenteId}
+          )
+        )
+      )`;
 }
 
 const ROTULO_STATUS: Record<string, string> = Object.fromEntries(
@@ -144,6 +165,9 @@ const EVENTO_VISIVEL: Record<string, string> = {
   // Rastro das ações da PRÓPRIA agência. Tipo próprio justamente para
   // nunca se confundir com as anotações internas da consultoria.
   venda_agencia: 'Dados da venda atualizados',
+  // Anotação interna DA AGÊNCIA. Espelha o 'comentario' da consultoria e
+  // obedece à mesma fronteira no sentido oposto: o CRM interno não a lê.
+  nota_agencia: 'Anotação da equipe',
 };
 
 /**
