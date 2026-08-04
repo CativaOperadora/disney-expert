@@ -21,7 +21,7 @@ export default async function PaginaPreferencias() {
     const sess = await sessaoPortal();
     return (
       <div className="tela">
-        {sess && <PortalHeader sess={sess} />}
+        {sess && <PortalHeader sess={sess} ativo="pref" />}
         <Preferencias voltarPara="/portal" />
       </div>
     );

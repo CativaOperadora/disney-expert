@@ -7,7 +7,7 @@ export default function PortalHeader({
   ativo,
 }: {
   sess: SessaoPortal;
-  ativo?: 'sol' | 'leads' | 'dash' | 'link' | 'user';
+  ativo?: 'sol' | 'leads' | 'dash' | 'link' | 'user' | 'pref';
 }) {
   const cls = (a: string) => `portal-nav-link${ativo === a ? ' ativa' : ''}`;
   return (
@@ -26,6 +26,9 @@ export default function PortalHeader({
         {sess.admin && (
           <Link className={cls('user')} href="/portal/usuarios">Usuários</Link>
         )}
+        {/* Entrada explícita: o avatar também leva aqui, mas ninguém
+            descobre uma tela por um clique sem rótulo. */}
+        <Link className={cls('pref')} href="/preferencias">Preferências</Link>
       </nav>
 
       <div className="portal-usuario">
