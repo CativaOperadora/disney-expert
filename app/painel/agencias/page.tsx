@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listarAgencias } from '@/lib/superadmin';
 import Agencias from './Agencias';
+import PainelHeader from '../PainelHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +23,7 @@ export default async function PaginaAgencias() {
 
   return (
     <div className="tela">
-      <header className="barra">
-        <div className="barra-marca">
-          <img className="barra-logo" src="/logo-cativa.png" alt="Cativa Orlando Expert" />
-          <span className="marca-divisor" />
-          <span className="marca-produto">Administração da plataforma</span>
-        </div>
-        <nav className="portal-nav">
-          <Link className="portal-nav-link" href="/painel">← CRM</Link>
-        </nav>
-        <Link href="/api/sair" className="sair" prefetch={false}>Sair</Link>
-      </header>
+      <PainelHeader titulo="Administração da plataforma" />
 
       <main className="portal">
         <div className="portal-topo">

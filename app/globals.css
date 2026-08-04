@@ -2322,3 +2322,82 @@ a.portal-usuario-nome:hover { color: var(--marca); }
   .botao-retornar, .botao-retornar svg { transition: none; }
   .botao-retornar:hover svg { transform: none; }
 }
+
+/* =====================================================================
+   MENU DO USUARIO · aberto pelo proprio nome no cabecalho
+   Agrupa o que e "meu" (perfil, meu dashboard, meu link), tirando esses
+   itens da navegacao principal.
+   ===================================================================== */
+
+.menu-usuario { position: relative; }
+
+.menu-usuario-gatilho {
+  display: flex; align-items: center; gap: 9px;
+  background: none; border: 1px solid transparent; border-radius: 10px;
+  padding: 5px 10px 5px 6px; cursor: pointer;
+  font-family: inherit; font-size: 14px; color: var(--texto-medio);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.menu-usuario-gatilho:hover,
+.menu-usuario-gatilho.aberto {
+  background: var(--fundo); border-color: var(--borda); color: var(--marca);
+}
+.menu-usuario-gatilho:focus-visible { outline: 2px solid var(--marca-media); outline-offset: 2px; }
+.menu-usuario-nome { font-weight: 500; white-space: nowrap; }
+.menu-usuario-seta { flex-shrink: 0; transition: transform 0.18s; opacity: 0.7; }
+.menu-usuario-gatilho.aberto .menu-usuario-seta { transform: rotate(180deg); }
+
+.menu-usuario-painel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 70;
+  width: 286px;
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 14px; box-shadow: 0 18px 46px var(--sombra);
+  overflow: hidden;
+  animation: menu-abre 0.14s ease-out;
+}
+@keyframes menu-abre {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.menu-usuario-topo {
+  padding: 13px 16px; border-bottom: 1px solid var(--borda);
+  display: flex; flex-direction: column; gap: 1px;
+}
+.menu-usuario-topo strong { font-size: 14px; color: var(--texto); }
+.menu-usuario-topo span { font-size: 12px; color: var(--texto-fraco); }
+
+.menu-usuario-lista { list-style: none; margin: 0; padding: 5px; }
+.menu-usuario-lista a,
+.menu-usuario-rodape a {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 9px;
+  text-decoration: none; color: var(--texto);
+  transition: background 0.12s;
+}
+.menu-usuario-lista a:hover,
+.menu-usuario-rodape a:hover { background: var(--marca-fundo); color: var(--marca); }
+.menu-usuario-icone {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
+  background: var(--marca-fundo); color: var(--marca);
+  display: flex; align-items: center; justify-content: center;
+}
+.menu-usuario-lista a:hover .menu-usuario-icone { background: var(--superficie); }
+.menu-usuario-rot { display: block; font-size: 13.5px; font-weight: 500; }
+.menu-usuario-desc { display: block; font-size: 11.5px; color: var(--texto-fraco); }
+
+.menu-usuario-rodape { padding: 5px; border-top: 1px solid var(--borda); }
+.menu-usuario-rodape a { font-size: 13.5px; }
+.menu-usuario-rodape a:hover { background: #fbe9e7; color: #a33227; }
+:root[data-tema='escuro'] .menu-usuario-rodape a:hover { background: #35201d; color: #f0918a; }
+.menu-usuario-rodape .menu-usuario-icone { background: transparent; color: var(--texto-fraco); }
+.menu-usuario-rodape a:hover .menu-usuario-icone { color: inherit; }
+
+@media (max-width: 760px) {
+  .menu-usuario-nome { display: none; }
+  .menu-usuario-painel { width: 262px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-usuario-painel { animation: none; }
+  .menu-usuario-seta { transition: none; }
+}

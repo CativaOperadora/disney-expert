@@ -148,8 +148,8 @@ export default function Preferencias({ voltarPara }: { voltarPara: string }) {
     <main className="portal portal-estreito">
       <div className="portal-topo">
         <div>
-          <h1 className="portal-titulo">Preferências</h1>
-          <p className="portal-sub">Ajuste a sua experiência no sistema.</p>
+          <h1 className="portal-titulo">Editar meu perfil</h1>
+          <p className="portal-sub">Seus dados, aparência e senha.</p>
         </div>
         <a href={voltarPara} className="portal-limpar">← Voltar</a>
       </div>

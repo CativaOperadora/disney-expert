@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { sql } from '@/lib/db';
 import { juntarCard } from '@/lib/cards';
 import Quadro, { type Cartao, type Coluna } from './Quadro';
+import PainelHeader from './PainelHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,33 +58,9 @@ export default async function Painel() {
 
   return (
     <div className="tela">
-      <header className="barra">
-        <div className="barra-marca">
-          <img className="barra-logo" src="/logo-cativa.png" alt="Cativa Orlando Expert" />
-          <span className="marca-divisor" />
-          <span className="marca-produto">Consultoria</span>
-        </div>
-
-        <div className="barra-info">
-          {abertas} {abertas === 1 ? 'solicitação aberta' : 'solicitações abertas'}
-        </div>
-
-        <Link href="/painel/dashboards" className="barra-link" prefetch={false}>
-          Dashboards
-        </Link>
-
-        <Link href="/painel/agencias" className="barra-link" prefetch={false}>
-          Agências
-        </Link>
-
-        <Link href="/preferencias" className="barra-link" prefetch={false}>
-          Preferências
-        </Link>
-
-        <Link href="/api/sair" className="sair" prefetch={false}>
-          Sair
-        </Link>
-      </header>
+      <PainelHeader
+        info={`${abertas} ${abertas === 1 ? 'solicitação aberta' : 'solicitações abertas'}`}
+      />
 
       <Quadro cartoes={cartoes} colunas={colunas} agora={Date.now()} />
     </div>

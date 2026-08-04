@@ -21,7 +21,7 @@ export default async function PaginaPreferencias() {
     const sess = await sessaoPortal();
     return (
       <div className="tela">
-        {sess && <PortalHeader sess={sess} ativo="pref" />}
+        {sess && <PortalHeader sess={sess} />}
         <Preferencias voltarPara="/portal" />
       </div>
     );
@@ -35,7 +35,7 @@ export default async function PaginaPreferencias() {
           <span className="marca-divisor" />
           <span className="marca-produto">Consultoria</span>
         </div>
-        <a href="/painel" className="barra-link">← Voltar ao painel</a>
+        <a href="/painel" className="portal-nav-link">← Voltar ao painel</a>
       </header>
       <Preferencias voltarPara="/painel" />
     </div>

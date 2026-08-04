@@ -11,6 +11,7 @@ import {
   KpiCard, BarrasH, Rosca, LinhaEvolucao, BarrasFaturamento, TabelaRanking,
 } from './Graficos';
 import { fmtInt, fmtReais, fmtPct, fmtDuracao, AZUL, CATEGORICA } from './formato';
+import PainelHeader from '../PainelHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,15 +66,7 @@ export default async function Dashboards({
 
   return (
     <div className="tela">
-      <header className="barra">
-        <div className="barra-marca">
-          <Link href="/painel" className="voltar-inline">← Fila</Link>
-          <span className="marca-divisor" />
-          <img className="barra-logo" src="/logo-cativa.png" alt="Cativa Orlando Expert" />
-          <span className="marca-produto">Dashboards</span>
-        </div>
-        <Link href="/api/sair" className="sair" prefetch={false}>Sair</Link>
-      </header>
+      <PainelHeader titulo="Dashboards" />
 
       <main className="bi">
         <Filtros opcoes={opcoes} filtros={filtros} />

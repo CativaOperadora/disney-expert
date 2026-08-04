@@ -1,15 +1,24 @@
 import Link from 'next/link';
 import type { SessaoPortal } from '@/lib/portal-auth';
 import Notificacoes from './Notificacoes';
+import MenuUsuario, {
+  ICONE_PERFIL, ICONE_DASHBOARD, ICONE_LINK,
+} from '../MenuUsuario';
 
+/**
+ * A navegação principal fica só com o trabalho COMPARTILHADO da agência.
+ * Tudo que é "meu" — perfil, meu dashboard, meu link — vai para o menu
+ * do próprio usuário, aberto pelo nome no canto direito.
+ */
 export default function PortalHeader({
   sess,
   ativo,
 }: {
   sess: SessaoPortal;
-  ativo?: 'sol' | 'leads' | 'dash' | 'link' | 'user' | 'pref';
+  ativo?: 'sol' | 'leads' | 'user';
 }) {
   const cls = (a: string) => `portal-nav-link${ativo === a ? ' ativa' : ''}`;
+
   return (
     <header className="barra">
       <div className="barra-marca">
@@ -21,30 +30,39 @@ export default function PortalHeader({
       <nav className="portal-nav">
         <Link className={cls('sol')} href="/portal">Solicitações</Link>
         <Link className={cls('leads')} href="/portal/leads">Leads</Link>
-        <Link className={cls('dash')} href="/portal/dashboard">Dashboard</Link>
-        <Link className={cls('link')} href="/portal/meu-link">Meu Link</Link>
         {sess.admin && (
           <Link className={cls('user')} href="/portal/usuarios">Usuários</Link>
         )}
-        {/* Entrada explícita: o avatar também leva aqui, mas ninguém
-            descobre uma tela por um clique sem rótulo. */}
-        <Link className={cls('pref')} href="/preferencias">Preferências</Link>
       </nav>
 
       <div className="portal-usuario">
         <Notificacoes />
-        <Link href="/preferencias" className="portal-usuario-nome" title="Preferências">
-          {sess.foto ? (
-            <img className="usuario-foto" src={`/api/foto/${sess.foto}`} alt="" />
-          ) : (
-            <span className="usuario-foto usuario-foto-vazia" aria-hidden="true">
-              {sess.nome.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('')}
-            </span>
-          )}
-          {sess.nome}
-          {sess.admin && <span className="selo-admin">Admin</span>}
-        </Link>
-        <Link href="/api/portal/sair" className="sair" prefetch={false}>Sair</Link>
+        <MenuUsuario
+          nome={sess.nome}
+          foto={sess.foto}
+          selo={sess.admin ? 'Admin' : null}
+          sairHref="/api/portal/sair"
+          itens={[
+            {
+              href: '/perfil',
+              rotulo: 'Editar meu perfil',
+              descricao: 'Nome, foto, tema e senha',
+              icone: ICONE_PERFIL,
+            },
+            {
+              href: '/portal/dashboard',
+              rotulo: sess.admin ? 'Dashboard da agência' : 'Meu dashboard',
+              descricao: 'Vendas, conversão e faturamento',
+              icone: ICONE_DASHBOARD,
+            },
+            {
+              href: '/portal/meu-link',
+              rotulo: 'Meu link',
+              descricao: 'Link e QR de captação',
+              icone: ICONE_LINK,
+            },
+          ]}
+        />
       </div>
     </header>
   );

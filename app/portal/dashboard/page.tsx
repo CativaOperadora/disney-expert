@@ -66,7 +66,7 @@ export default async function PortalDashboard({
 
   return (
     <div className="tela">
-      <PortalHeader sess={sess} ativo="dash" />
+      <PortalHeader sess={sess} />
 
       <main className="bi">
         <div className="portal-topo">

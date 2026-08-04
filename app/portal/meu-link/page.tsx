@@ -48,7 +48,7 @@ export default async function MeuLink({
     const svg = await qr(url);
     return (
       <div className="tela">
-        <PortalHeader sess={sess} ativo="link" />
+        <PortalHeader sess={sess} />
         <main className="portal portal-estreito">
           <div className="portal-topo">
             <div>
@@ -93,7 +93,7 @@ export default async function MeuLink({
 
   return (
     <div className="tela">
-      <PortalHeader sess={sess} ativo="link" />
+      <PortalHeader sess={sess} />
       <main className="portal">
         <div className="portal-topo">
           <div>
