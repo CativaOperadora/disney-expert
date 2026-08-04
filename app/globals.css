@@ -888,15 +888,7 @@ body {
 .painel-titulo { font-size: 26px; line-height: 1.2; color: var(--marca); }
 .painel-sub { color: var(--texto-fraco); font-size: 15px; }
 
-.voltar-link {
-  display: inline-block;
-  color: var(--marca);
-  text-decoration: none;
-  font-size: 15px;
-  margin-bottom: 18px;
-}
 
-.voltar-link:hover { text-decoration: underline; }
 
 .detalhe-topo { margin-bottom: 22px; }
 
@@ -2291,4 +2283,42 @@ a.portal-usuario-nome:hover { color: var(--marca); }
   :root:not([data-tema='claro']) .selo-admin,
   :root:not([data-tema='claro']) .leads-recorrente,
   :root:not([data-tema='claro']) .portal-nav-link.ativa { color: #16202b; }
+}
+
+/* =====================================================================
+   BOTAO DE RETORNO · topo das fichas
+   Link com aparencia de botao: precisa de inline-flex para alinhar o
+   icone ao texto, e de fundo solido (--superficie) para se destacar do
+   fundo da pagina nos DOIS temas -- o .botao-voltar padrao e
+   transparente e sumiria aqui.
+   ===================================================================== */
+
+.botao-retornar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14.5px;
+  text-decoration: none;
+  background: var(--superficie);
+  border-color: var(--borda);
+  color: var(--texto-medio);
+  margin-bottom: 18px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.botao-retornar:hover {
+  border-color: var(--marca);
+  color: var(--marca);
+  background: var(--marca-fundo);
+}
+.botao-retornar:hover svg { transform: translateX(-2px); }
+.botao-retornar svg { flex-shrink: 0; transition: transform 0.15s; }
+.botao-retornar:focus-visible {
+  outline: 2px solid var(--marca-media);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .botao-retornar, .botao-retornar svg { transition: none; }
+  .botao-retornar:hover svg { transform: none; }
 }

@@ -71,7 +71,14 @@ export default async function PortalDetalhe({
       <PortalHeader sess={sess} ativo="sol" />
 
       <main className="portal portal-detalhe">
-        <Link href="/portal" className="voltar-link">← Voltar para as solicitações</Link>
+        <Link href="/portal" className="botao botao-voltar botao-retornar">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          Voltar para as solicitações
+        </Link>
 
         <header className="portal-det-topo">
           <div>
@@ -173,15 +180,6 @@ export default async function PortalDetalhe({
                 ))}
                 {timeline.length === 0 && <li className="portal-nota">Sem movimentações registradas ainda.</li>}
               </ol>
-            </section>
-
-            {/* Documentos */}
-            <section className="cartao-bi">
-              <h3 className="cartao-bi-titulo">Documentos</h3>
-              <p className="portal-nota">
-                Nenhum documento anexado. Propostas e vouchers enviados pela
-                consultoria aparecerão aqui.
-              </p>
             </section>
           </aside>
         </div>

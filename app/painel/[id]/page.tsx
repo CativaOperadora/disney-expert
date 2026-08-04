@@ -151,8 +151,13 @@ export default async function PaginaDetalhe({
 
   return (
     <main className="painel">
-      <Link href="/painel" className="voltar-link">
-        ← Voltar para a fila
+      <Link href="/painel" className="botao botao-voltar botao-retornar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
+        </svg>
+        Voltar para a fila
       </Link>
 
       <header className="detalhe-topo">
