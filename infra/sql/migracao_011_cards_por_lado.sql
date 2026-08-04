@@ -29,11 +29,18 @@
 --   'consultoria', portal usa 'agencia'.
 -- =====================================================================
 
+-- Reexecução é segura: rodar de novo não altera nada e não dá erro.
+-- CREATE TYPE não aceita IF NOT EXISTS, daí o bloco DO.
 begin;
 
-create type lado_card as enum ('consultoria', 'agencia');
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'lado_card') then
+    create type lado_card as enum ('consultoria', 'agencia');
+  end if;
+end $$;
 
-create table cards (
+create table if not exists cards (
   id             uuid primary key default gen_random_uuid(),
   solicitacao_id uuid not null references solicitacoes(id) on delete cascade,
   lado           lado_card not null,
@@ -73,11 +80,12 @@ comment on column cards.lado is
 comment on column cards.valor_total_venda is
   'Valor registrado por ESTE lado. Divergir do outro lado é esperado: a agência ajusta a própria comissão.';
 
-create index cards_solicitacao_idx on cards (solicitacao_id);
-create index cards_lado_status_idx on cards (lado, status);
-create index cards_responsavel_idx on cards (responsavel_id) where lado = 'consultoria';
-create index cards_venda_idx       on cards (lado, venda_em) where status = 'venda_finalizada';
+create index if not exists cards_solicitacao_idx on cards (solicitacao_id);
+create index if not exists cards_lado_status_idx on cards (lado, status);
+create index if not exists cards_responsavel_idx on cards (responsavel_id) where lado = 'consultoria';
+create index if not exists cards_venda_idx       on cards (lado, venda_em) where status = 'venda_finalizada';
 
+drop trigger if exists cards_touch on cards;
 create trigger cards_touch before update on cards
   for each row execute function tocar_atualizado_em();
 
@@ -100,7 +108,10 @@ select
   s.valor_total_venda, s.venda_em, s.id_reserva,
   s.motivo_perda, s.descricao_perda, s.criado_em
 from solicitacoes s
-cross join (values ('consultoria'::lado_card), ('agencia'::lado_card)) as l(lado);
+cross join (values ('consultoria'::lado_card), ('agencia'::lado_card)) as l(lado)
+-- Numa reexecução os cards já existem: não sobrescreve o que evoluiu
+-- depois da primeira migração. Copiar de novo apagaria o trabalho feito.
+on conflict (solicitacao_id, lado) do nothing;
 
 -- ---------------------------------------------------------------------
 -- As colunas antigas ficam CONGELADAS, não são removidas.
