@@ -37,6 +37,14 @@ services:
       - ./sql/migracao_008_leads_marketing.sql:/docker-entrypoint-initdb.d/08_leads.sql:ro
       - ./sql/migracao_009_perda_detalhada.sql:/docker-entrypoint-initdb.d/09_perda.sql:ro
       - ./sql/migracao_010_isolamento_anotacoes.sql:/docker-entrypoint-initdb.d/10_anotacoes.sql:ro
+      - ./sql/migracao_011_cards_por_lado.sql:/docker-entrypoint-initdb.d/11_cards.sql:ro
+      - ./sql/migracao_012_seguidores_notificacoes.sql:/docker-entrypoint-initdb.d/12_seguidores.sql:ro
+      - ./sql/migracao_013_usuarios_preferencias.sql:/docker-entrypoint-initdb.d/13_preferencias.sql:ro
+      - ./sql/migracao_014_emails_especialistas.sql:/docker-entrypoint-initdb.d/14_emails.sql:ro
+      - ./sql/migracao_015_nomes_especialistas.sql:/docker-entrypoint-initdb.d/15_nomes.sql:ro
+      - ./sql/migracao_016_notificacoes_internas.sql:/docker-entrypoint-initdb.d/16_notif_internas.sql:ro
+      - ./sql/migracao_017_status_envio_enviando.sql:/docker-entrypoint-initdb.d/17_status_envio.sql:ro
+      - ./sql/migracao_018_admins_consultoria.sql:/docker-entrypoint-initdb.d/18_admins.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
