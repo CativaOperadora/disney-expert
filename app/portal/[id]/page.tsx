@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { sessaoPortal } from '@/lib/portal-auth';
 import { detalheSolicitacao, timelineSolicitacao } from '@/lib/portal';
-import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
+import { PERGUNTAS, PASSOS, textoIdades } from '@/lib/perguntas';
 import { ROTULO_MOTIVO } from '@/lib/sla';
 import PortalHeader from '../PortalHeader';
 import CamposVenda from './CamposVenda';
@@ -24,6 +24,8 @@ const reais = (v: string | null) =>
 const MOTIVO = ROTULO_MOTIVO;
 
 function formatar(valor: any): string {
+  const idades = textoIdades(valor);
+  if (idades) return idades;
   if (Array.isArray(valor)) return valor.join(', ');
   if (valor === true) return 'Sim';
   if (valor === false) return 'Não';

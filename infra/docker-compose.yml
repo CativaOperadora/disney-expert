@@ -45,6 +45,7 @@ services:
       - ./sql/migracao_016_notificacoes_internas.sql:/docker-entrypoint-initdb.d/16_notif_internas.sql:ro
       - ./sql/migracao_017_status_envio_enviando.sql:/docker-entrypoint-initdb.d/17_status_envio.sql:ro
       - ./sql/migracao_018_admins_consultoria.sql:/docker-entrypoint-initdb.d/18_admins.sql:ro
+      - ./sql/migracao_019_idades_criancas.sql:/docker-entrypoint-initdb.d/19_idades.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s

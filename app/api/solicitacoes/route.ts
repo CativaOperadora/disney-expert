@@ -6,6 +6,9 @@ import {
   perguntaVisivel,
   projetarColunas,
   calcularCompletude,
+  idadesValidas,
+  periodoValido,
+  dataValida,
 } from '@/lib/perguntas';
 import { processarFila } from '@/lib/fila';
 import { criarCards } from '@/lib/cards';
@@ -56,7 +59,14 @@ export async function POST(req: NextRequest) {
     const vazio =
       v === undefined || v === null || v === '' ||
       (Array.isArray(v) && v.length === 0) ||
-      (p.tipo === 'aceite' && v !== true);
+      (p.tipo === 'aceite' && v !== true) ||
+      // Não basta existir: precisa ter uma idade por criança, e cada uma
+      // dentro da faixa. Um array curto ou com buraco reprova aqui.
+      (p.tipo === 'idades' && !idadesValidas(p, respostas)) ||
+      // Data no passado: a checagem do navegador é conveniência, esta é a
+      // que vale. Sem ela, um POST direto grava viagem para 2020.
+      (p.tipo === 'mes_ano' && !periodoValido(v)) ||
+      (p.tipo === 'data' && !dataValida(v));
     if (vazio) faltando.push(p.id);
   }
   if (faltando.length > 0) {
@@ -113,7 +123,7 @@ export async function POST(req: NextRequest) {
         cliente_nome, cliente_email, cliente_whatsapp,
         total_pessoas, total_criancas, primeira_viagem,
         data_prevista, data_prevista_texto, origem_embarque,
-        dias_orlando, dias_parques, parques,
+        dias_orlando, dias_parques, parques, idades_criancas,
         respostas, versao_formulario,
         consentimento_lgpd, consentimento_ip, consentimento_em,
         aceite_marketing, aceite_marketing_em
@@ -124,6 +134,7 @@ export async function POST(req: NextRequest) {
         ${col.total_pessoas}, ${col.total_criancas}, ${col.primeira_viagem},
         ${dataPrevista}, ${dataTexto}, ${col.origem_embarque},
         ${col.dias_orlando}, ${col.dias_parques}, ${col.parques},
+        ${col.idades_criancas},
         ${sql.json(limpas)}, ${VERSAO_FORMULARIO},
         ${col.consentimento_lgpd}, ${ip}, now(),
         ${col.aceite_marketing}, ${col.aceite_marketing ? sql`now()` : null}

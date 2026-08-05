@@ -16,7 +16,7 @@
  * ler corretamente registros antigos depois que o formulário evoluir.
  */
 
-export const VERSAO_FORMULARIO = 4;
+export const VERSAO_FORMULARIO = 5;
 
 export type TipoCampo =
   | 'texto'
@@ -28,6 +28,7 @@ export type TipoCampo =
   | 'multipla'     // várias opções
   | 'mes_ano'      // período previsto da viagem
   | 'data'         // dia exato da viagem
+  | 'idades'       // uma idade por criança, quantidade vinda de outra pergunta
   | 'aceite';      // caixa de consentimento
 
 export interface Pergunta {
@@ -41,8 +42,19 @@ export interface Pergunta {
   opcoes?: string[];
   min?: number;
   max?: number;
-  /** Só aparece quando a pergunta indicada tiver um dos valores listados. */
-  condicao?: { pergunta: string; valores: string[] };
+  /**
+   * Só aparece quando a pergunta indicada satisfizer a condição.
+   *
+   * `valores` compara texto; `minimo` compara número. O segundo existe
+   * porque "tem pelo menos uma criança" não é uma escolha de lista — é
+   * uma quantidade digitada, e listar "1","2","3"… seria frágil.
+   */
+  condicao?:
+    | { pergunta: string; valores: string[] }
+    | { pergunta: string; minimo: number };
+
+  /** Só para tipo 'idades': de qual pergunta sai a quantidade de campos. */
+  quantidadeDe?: string;
   /** Nome da coluna em solicitacoes que recebe uma cópia consultável. */
   coluna?: string;
 }
@@ -129,6 +141,26 @@ export const PERGUNTAS: Pergunta[] = [
     min: 0,
     max: 20,
     coluna: 'total_criancas',
+  },
+  {
+    // Um campo por criança, gerado a partir de `quantas_criancas`.
+    // A idade é a DA VIAGEM, não a de hoje: parque cobra pela idade no
+    // dia da visita, e uma viagem daqui a um ano muda a faixa de quem
+    // está perto do aniversário.
+    id: 'idades_criancas',
+    passo: 2,
+    rotulo: 'Idade de cada criança na data da viagem',
+    ajuda:
+      'Quantos anos cada uma terá quando viajarem. É o que define o valor do ingresso.',
+    tipo: 'idades',
+    obrigatoria: true,
+    quantidadeDe: 'quantas_criancas',
+    condicao: { pergunta: 'quantas_criancas', minimo: 1 },
+    // 0 a 8 para não contradizer a pergunta anterior, que define adulto a
+    // partir de 9 anos. Ver nota sobre a régua dos parques no schema.
+    min: 0,
+    max: 8,
+    coluna: 'idades_criancas',
   },
   {
     id: 'primeira_viagem',
@@ -334,9 +366,95 @@ export function perguntaVisivel(
   pergunta: Pergunta,
   respostas: Record<string, unknown>,
 ): boolean {
-  if (!pergunta.condicao) return true;
-  const valor = respostas[pergunta.condicao.pergunta];
-  return typeof valor === 'string' && pergunta.condicao.valores.includes(valor);
+  const c = pergunta.condicao;
+  if (!c) return true;
+  const valor = respostas[c.pergunta];
+
+  if ('minimo' in c) {
+    const n = paraNumero(valor);
+    return n !== null && n >= c.minimo;
+  }
+  return typeof valor === 'string' && c.valores.includes(valor);
+}
+
+/**
+ * Quantos campos de idade mostrar. Limitado ao `max` da pergunta de
+ * quantidade para uma digitação errada (200 crianças) não gerar uma tela
+ * infinita nem um array absurdo no banco.
+ */
+export function quantidadeDeCampos(
+  pergunta: Pergunta,
+  respostas: Record<string, unknown>,
+): number {
+  if (!pergunta.quantidadeDe) return 0;
+  const origem = buscarPergunta(pergunta.quantidadeDe);
+  const teto = origem?.max ?? 20;
+  const n = paraNumero(respostas[pergunta.quantidadeDe]) ?? 0;
+  return Math.max(0, Math.min(Math.floor(n), teto));
+}
+
+/**
+ * Regras de data, compartilhadas pelos dois lados.
+ *
+ * Ficavam só no navegador, o que deixava a API aceitar um período no
+ * passado para quem postasse direto — a validação do cliente é
+ * conveniência, não defesa. Comparação de texto basta: YYYY-MM e
+ * YYYY-MM-DD ordenam cronologicamente.
+ */
+export function periodoMinimo(agora = new Date()): string {
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function periodoValido(v: unknown, agora = new Date()): boolean {
+  return (
+    typeof v === 'string' &&
+    /^\d{4}-\d{2}$/.test(v) &&
+    v >= periodoMinimo(agora)
+  );
+}
+
+export function dataValida(v: unknown, agora = new Date()): boolean {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const hoje = `${periodoMinimo(agora)}-${String(agora.getDate()).padStart(2, '0')}`;
+  return v >= hoje;
+}
+
+/**
+ * [5, 8] → "5 e 8 anos".
+ *
+ * Um array só de números, no formulário, é sempre idade — nenhuma outra
+ * pergunta guarda números em lista. Por isso reconhece pelo formato e não
+ * precisa do id, o que deixa os três lugares que exibem respostas
+ * (briefing, ficha do CRM, ficha do portal) usarem a mesma função sem
+ * saber de qual pergunta o valor veio.
+ */
+export function textoIdades(v: unknown): string | null {
+  if (!Array.isArray(v) || v.length === 0) return null;
+  const n = v.map(paraNumero).filter((x): x is number => x !== null);
+  if (n.length !== v.length) return null;
+
+  const anos = (x: number) => (x === 1 ? '1 ano' : `${x} anos`);
+  if (n.length === 1) return anos(n[0]);
+  return `${n.slice(0, -1).join(', ')} e ${anos(n[n.length - 1])}`;
+}
+
+/** Idades válidas e completas para a quantidade de crianças informada. */
+export function idadesValidas(
+  pergunta: Pergunta,
+  respostas: Record<string, unknown>,
+): boolean {
+  const esperado = quantidadeDeCampos(pergunta, respostas);
+  const v = respostas[pergunta.id];
+  if (!Array.isArray(v) || v.length !== esperado) return false;
+  return v.every((x) => {
+    const n = paraNumero(x);
+    return (
+      n !== null &&
+      Number.isInteger(n) &&
+      n >= (pergunta.min ?? 0) &&
+      n <= (pergunta.max ?? 8)
+    );
+  });
 }
 
 /**
@@ -405,6 +523,14 @@ export function projetarColunas(respostas: Record<string, any>) {
     parques: Array.isArray(respostas.parques) ? respostas.parques : null,
     consentimento_lgpd: respostas.consentimento_lgpd === true,
     aceite_marketing: respostas.aceite_marketing === true,
+    // Array de smallint. Vazio vira null: coluna sem valor é mais honesta
+    // que um array vazio, que se confundiria com "informou nenhuma idade".
+    idades_criancas: (() => {
+      const v = respostas.idades_criancas;
+      if (!Array.isArray(v) || v.length === 0) return null;
+      const nums = v.map(paraNumero).filter((n): n is number => n !== null);
+      return nums.length > 0 ? nums : null;
+    })(),
   };
 }
 

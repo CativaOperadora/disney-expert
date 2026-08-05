@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sql } from '@/lib/db';
-import { PERGUNTAS, PASSOS } from '@/lib/perguntas';
+import { PERGUNTAS, PASSOS, textoIdades } from '@/lib/perguntas';
 import { ROTULO_STATUS, ROTULO_MOTIVO, calcularSla } from '@/lib/sla';
 import { listarAnexos } from '@/lib/anexos';
 import { juntarCard } from '@/lib/cards';
@@ -61,6 +61,8 @@ const ROTULO_EVENTO: Record<string, string> = {
 };
 
 function formatar(valor: any): string {
+  const idades = textoIdades(valor);
+  if (idades) return idades;
   if (Array.isArray(valor)) return valor.join(', ');
   if (valor === true) return 'Sim';
   if (valor === false) return 'Não';

@@ -7,6 +7,9 @@ import {
   perguntasDoPasso,
   perguntaVisivel,
   somarPessoas,
+  quantidadeDeCampos,
+  idadesValidas,
+  periodoMinimo,
   type Pergunta,
 } from '@/lib/perguntas';
 
@@ -21,7 +24,34 @@ const HOJE = new Date();
 const ANO_ATUAL = HOJE.getFullYear();
 const MES_ATUAL = HOJE.getMonth() + 1;
 
-const ANOS = [ANO_ATUAL, ANO_ATUAL + 1, ANO_ATUAL + 2, ANO_ATUAL + 3];
+/**
+ * Meses disponíveis, gerados a partir de HOJE — nunca uma lista fixa.
+ *
+ * A versão anterior tinha dois seletores, mês e ano. O de mês era
+ * filtrado pelo ano ESCOLHIDO, e antes de escolher o ano ele assumia o
+ * corrente: quem abria o formulário via só os meses que restavam de 2026
+ * e concluía que 2027 não existia. Agora é um seletor só, com o par
+ * mês/ano já pronto, e a lista anda sozinha com o calendário.
+ */
+const MESES_A_FRENTE = 36;
+
+function periodosDisponiveis() {
+  const lista: { valor: string; rotulo: string }[] = [];
+  for (let i = 0; i < MESES_A_FRENTE; i++) {
+    const d = new Date(ANO_ATUAL, HOJE.getMonth() + i, 1);
+    const ano = d.getFullYear();
+    const mes = d.getMonth();
+    lista.push({
+      valor: `${ano}-${String(mes + 1).padStart(2, '0')}`,
+      rotulo: `${MESES[mes]} de ${ano}`,
+    });
+  }
+  return lista;
+}
+
+const PERIODOS = periodosDisponiveis();
+/** Mesma regra que o servidor aplica — fonte única em lib/perguntas. */
+const PERIODO_MINIMO = periodoMinimo(HOJE);
 
 /** Data de hoje em ISO (YYYY-MM-DD), usada como mínimo do seletor de dia. */
 const ISO_HOJE = `${ANO_ATUAL}-${String(MES_ATUAL).padStart(2, '0')}-${String(
@@ -60,14 +90,6 @@ function normalizar(s: string) {
     .trim();
 }
 
-/** No ano corrente, só meses a partir do próximo. Ninguém viaja para trás. */
-function mesesDisponiveis(ano: number) {
-  const primeiro = ano === ANO_ATUAL ? MES_ATUAL + 1 : 1;
-  return MESES.map((nome, i) => ({ nome, numero: i + 1 })).filter(
-    (m) => m.numero >= primeiro,
-  );
-}
-
 function mascararTelefone(valor: string) {
   const d = valor.replace(/\D/g, '').slice(0, 11);
   if (d.length <= 2) return d;
@@ -76,19 +98,21 @@ function mascararTelefone(valor: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-function validar(p: Pergunta, valor: any): string | null {
+function validar(p: Pergunta, valor: any, respostas: Respostas): string | null {
   const vazio =
     valor === undefined ||
     valor === null ||
     valor === '' ||
     (Array.isArray(valor) && valor.length === 0) ||
-    (p.tipo === 'aceite' && valor !== true);
+    (p.tipo === 'aceite' && valor !== true) ||
+    (p.tipo === 'idades' && !Array.isArray(valor));
 
   if (vazio) {
     if (!p.obrigatoria) return null;
     if (p.tipo === 'aceite') return 'Precisamos da sua autorização para seguir.';
     if (p.tipo === 'multipla') return 'Escolha ao menos uma opção.';
     if (p.tipo === 'escolha') return 'Escolha uma opção.';
+    if (p.tipo === 'idades') return 'Informe a idade de cada criança.';
     return 'Este campo é necessário.';
   }
 
@@ -105,11 +129,12 @@ function validar(p: Pergunta, valor: any): string | null {
     if (p.max !== undefined && n > p.max) return `O máximo é ${p.max}.`;
   }
   if (p.tipo === 'mes_ano') {
-    if (!/^\d{4}-\d{2}$/.test(valor)) return 'Escolha o mês e o ano.';
-    const [a, m] = String(valor).split('-').map(Number);
-    if (a * 12 + m <= ANO_ATUAL * 12 + MES_ATUAL) {
-      return 'Escolha um período a partir do mês que vem.';
-    }
+    if (!/^\d{4}-\d{2}$/.test(valor)) return 'Escolha o período da viagem.';
+    // Comparação de texto basta: YYYY-MM ordena cronologicamente.
+    if (String(valor) < PERIODO_MINIMO) return 'Escolha um período a partir deste mês.';
+  }
+  if (p.tipo === 'idades' && !idadesValidas(p, { ...respostas, [p.id]: valor })) {
+    return `Informe a idade de cada criança, de ${p.min} a ${p.max} anos.`;
   }
   if (p.tipo === 'data') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return 'Selecione uma data válida.';
@@ -165,7 +190,7 @@ export default function Formulario({
   function conferirPasso() {
     const novos: Record<string, string> = {};
     for (const p of visiveis) {
-      const erro = validar(p, respostas[p.id]);
+      const erro = validar(p, respostas[p.id], respostas);
       if (erro) novos[p.id] = erro;
     }
     setErros(novos);
@@ -268,6 +293,7 @@ export default function Formulario({
             valor={respostas[p.id]}
             erro={erros[p.id]}
             aoMudar={(v) => definir(p.id, v)}
+            quantidade={quantidadeDeCampos(p, respostas)}
           />
           {p.id === 'quantas_criancas' && <ResumoGrupo respostas={respostas} />}
         </div>
@@ -322,11 +348,15 @@ function Campo({
   valor,
   erro,
   aoMudar,
+  quantidade = 0,
 }: {
   pergunta: Pergunta;
   valor: any;
   erro?: string;
   aoMudar: (v: any) => void;
+  /** Só para tipo 'idades': quantos campos desenhar. Calculado por quem
+      tem as respostas, para o componente não precisar do estado inteiro. */
+  quantidade?: number;
 }) {
   if (p.tipo === 'aceite') {
     return (
@@ -395,38 +425,54 @@ function Campo({
       )}
 
       {p.tipo === 'mes_ano' && (
-        <div className="par">
-          <select
-            id={p.id}
-            className={`entrada ${erro ? 'invalida' : ''}`}
-            value={valor ? String(valor).slice(5, 7) : ''}
-            onChange={(e) =>
-              aoMudar(`${valor ? String(valor).slice(0, 4) : ANOS[0]}-${e.target.value}`)
-            }
-          >
-            <option value="">Mês</option>
-            {mesesDisponiveis(
-              valor ? Number(String(valor).slice(0, 4)) : ANOS[0],
-            ).map((m) => (
-              <option key={m.nome} value={String(m.numero).padStart(2, '0')}>
-                {m.nome}
-              </option>
-            ))}
-          </select>
-          <select
-            className={`entrada ${erro ? 'invalida' : ''}`}
-            value={valor ? String(valor).slice(0, 4) : ''}
-            onChange={(e) =>
-              aoMudar(`${e.target.value}-${valor ? String(valor).slice(5, 7) : '01'}`)
-            }
-          >
-            <option value="">Ano</option>
-            {ANOS.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
+        <select
+          id={p.id}
+          className={`entrada ${erro ? 'invalida' : ''}`}
+          value={valor ? String(valor) : ''}
+          onChange={(e) => aoMudar(e.target.value)}
+        >
+          <option value="">Selecione o mês e o ano</option>
+          {PERIODOS.map((pd) => (
+            <option key={pd.valor} value={pd.valor}>
+              {pd.rotulo}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Um campo por criança. A quantidade vem de `quantas_criancas`, e o
+          array acompanha: reduzir o número descarta as idades sobrando, em
+          vez de deixar valores fantasmas de uma escolha anterior. */}
+      {p.tipo === 'idades' && (
+        <div className="idades-grade">
+          {Array.from({ length: quantidade }, (_, i) => (
+            <div className="idade-campo" key={i}>
+              <label className="idade-rotulo" htmlFor={`${p.id}-${i}`}>
+                Criança {i + 1}
+              </label>
+              <input
+                id={`${p.id}-${i}`}
+                className={`entrada ${erro ? 'invalida' : ''}`}
+                type="number"
+                inputMode="numeric"
+                min={p.min}
+                max={p.max}
+                placeholder="anos"
+                value={
+                  Array.isArray(valor) && valor[i] !== undefined && valor[i] !== null
+                    ? String(valor[i])
+                    : ''
+                }
+                onChange={(e) => {
+                  const atual = Array.isArray(valor) ? [...valor] : [];
+                  const qtd = quantidade;
+                  atual.length = qtd;
+                  atual[i] = e.target.value === '' ? null : Number(e.target.value);
+                  aoMudar(atual);
+                }}
+              />
+            </div>
+          ))}
         </div>
       )}
 

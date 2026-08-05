@@ -1,4 +1,4 @@
-import { PERGUNTAS, PASSOS } from './perguntas';
+import { PERGUNTAS, PASSOS, textoIdades } from './perguntas';
 import type { Mensagem } from './email';
 
 /**
@@ -30,6 +30,9 @@ export interface DadosBriefing {
 }
 
 function valor(v: any): string {
+  // Idades vêm com a unidade: "5 e 8" sozinho não diz anos.
+  const idades = textoIdades(v);
+  if (idades) return idades;
   if (Array.isArray(v)) return v.join(', ');
   if (v === true) return 'Sim';
   if (v === false) return 'Não';

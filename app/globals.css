@@ -2473,3 +2473,16 @@ a.portal-usuario-nome:hover { color: var(--marca); }
   .login-arte-centrado .login-arte-logo { width: 210px; margin-bottom: -14px; }
   .login-arte-chamada { font-size: 18px; margin-bottom: 20px; }
 }
+
+/* --- Idades das criancas: um campo por crianca, gerados pela quantidade --- */
+.idades-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 12px;
+}
+.idade-campo { display: flex; flex-direction: column; gap: 5px; }
+.idade-rotulo {
+  font-size: 12.5px; font-weight: 500; color: var(--texto-medio);
+}
+/* O campo e estreito: o numero cabe, e a unidade vem no placeholder. */
+.idades-grade .entrada { padding: 11px 12px; font-size: 15px; }
